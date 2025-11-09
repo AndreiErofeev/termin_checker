@@ -99,12 +99,12 @@ class CheckService:
                         session.add(appointment)
 
                 # Update subscription last_checked
-                subscription.last_checked = check.checked_at
+                subscription.last_checked_at = check.checked_at
 
                 # Update service statistics
                 service.total_checks += 1
                 if result.available:
-                    service.last_available = check.checked_at
+                    service.last_appointments_at = check.checked_at
 
                 session.commit()
 

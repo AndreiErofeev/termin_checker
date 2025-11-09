@@ -126,6 +126,7 @@ class Subscription(Base):
     quantity = Column(Integer, default=1, nullable=False)  # Number of appointments needed
 
     # Notification preferences
+    notify_telegram = Column(Boolean, default=True, nullable=False)
     notify_on_found = Column(Boolean, default=True, nullable=False)
     notify_on_error = Column(Boolean, default=False, nullable=False)
 

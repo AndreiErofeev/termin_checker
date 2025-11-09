@@ -55,7 +55,7 @@ class UserService:
                 user.username = username or user.username
                 user.first_name = first_name or user.first_name
                 user.last_name = last_name or user.last_name
-                user.last_active = datetime.now()
+                user.last_activity = datetime.now()
 
                 for key, value in kwargs.items():
                     if hasattr(user, key):
@@ -124,7 +124,7 @@ class UserService:
                 'active_subscriptions': active_subscriptions,
                 'total_checks': total_checks,
                 'created_at': user.created_at.isoformat(),
-                'last_active': user.last_active.isoformat() if user.last_active else None
+                'last_activity': user.last_activity.isoformat() if user.last_activity else None
             }
 
     def update_plan(self, telegram_id: int, plan: UserPlan) -> bool:

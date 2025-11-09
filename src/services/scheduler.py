@@ -6,6 +6,7 @@ Handles periodic appointment checks using APScheduler.
 
 import logging
 import asyncio
+import os
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -15,6 +16,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from ..core.database import Database
 from .check_service import CheckService
 from .subscription_service import SubscriptionService
+from .notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -22,16 +24,22 @@ logger = logging.getLogger(__name__)
 class SchedulerService:
     """Service for scheduling periodic appointment checks"""
 
-    def __init__(self, db: Database):
+    def __init__(self, db: Database, bot_token: Optional[str] = None):
         """
         Initialize scheduler service
 
         Args:
             db: Database instance
+            bot_token: Telegram bot token (optional, reads from env if not provided)
         """
         self.db = db
         self.check_service = CheckService(db)
         self.subscription_service = SubscriptionService(db)
+
+        # Initialize notification service if bot token available
+        bot_token = bot_token or os.getenv('TELEGRAM_BOT_TOKEN')
+        self.notification_service = NotificationService(db, bot_token) if bot_token else None
+
         self.scheduler = AsyncIOScheduler()
         self.running = False
 
@@ -93,7 +101,17 @@ class SchedulerService:
                             f"✅ Found {check.appointment_count} appointment(s) "
                             f"for subscription {subscription.id}"
                         )
-                        # Notification will be handled by notification service
+
+                        # Send notification if service is available and user wants notifications
+                        if self.notification_service and subscription.notify_telegram and subscription.notify_on_found:
+                            try:
+                                await self.notification_service.send_appointment_notification(
+                                    user=subscription.user,
+                                    check=check,
+                                    appointments=check.appointments
+                                )
+                            except Exception as notif_error:
+                                logger.error(f"Failed to send notification: {notif_error}")
                     else:
                         logger.info(f"No appointments found for subscription {subscription.id}")
 

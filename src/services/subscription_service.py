@@ -241,12 +241,12 @@ class SubscriptionService:
             due_subscriptions = []
 
             for sub in subscriptions:
-                if sub.last_checked is None:
+                if sub.last_checked_at is None:
                     # Never checked, due immediately
                     due_subscriptions.append(sub)
                 else:
                     # Check if enough time has passed
-                    time_since_check = now - sub.last_checked
+                    time_since_check = now - sub.last_checked_at
                     if time_since_check >= timedelta(hours=sub.interval_hours):
                         due_subscriptions.append(sub)
 
