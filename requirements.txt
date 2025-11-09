@@ -11,8 +11,9 @@ alembic>=1.13.0
 
 # Future dependencies (uncomment when needed)
 
-# For Telegram bot
-# python-telegram-bot>=22.3.0
+# Telegram bot (Phase 3)
+python-telegram-bot>=21.0
+apscheduler>=3.10.0
 
 # For web API
 # fastapi>=0.115.0

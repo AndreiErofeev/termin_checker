@@ -10,9 +10,10 @@ Automated appointment availability checker for Düsseldorf city services (termin
 - ✅ **Screenshot capture** for verification
 - ✅ **Structured logging** with detailed execution traces
 - ✅ **Configurable services** via YAML configuration
-- 🔄 **Multi-user support** (coming soon)
-- 🤖 **Telegram bot integration** (coming soon)
-- ⏰ **Scheduled checks** (coming soon)
+- ✅ **Multi-user database** with SQLite/PostgreSQL support
+- ✅ **Telegram bot integration** with interactive commands
+- ✅ **Scheduled periodic checks** with APScheduler
+- ✅ **Notification system** for appointment alerts
 
 ## Quick Start
 
@@ -57,24 +58,43 @@ playwright install chromium
 
 ### Basic Usage
 
-#### Run the checker directly
+#### Initialize Database
 
 ```bash
-# Using Poetry
-poetry run python appointment_checker.py
+# Initialize database with default services
+python src/core/database.py init
 
-# Or with activated venv
-python appointment_checker.py
+# Check database statistics
+python src/core/database.py stats
+```
+
+#### Run Telegram Bot
+
+```bash
+# Set your bot token in .env
+echo "TELEGRAM_BOT_TOKEN=your_token_here" >> .env
+
+# Start the bot
+python src/bot/main.py
+```
+
+#### Run Standalone Scheduler
+
+```bash
+# Runs periodic checks without bot interface
+python src/services/scheduler.py
 ```
 
 #### Use as a module
 
 ```python
 import asyncio
-from appointment_checker import check_appointments
+from src.core.appointment_checker import AppointmentChecker
 
 async def main():
-    result = await check_appointments(
+    checker = AppointmentChecker()
+
+    result = await checker.check_appointments(
         category="Umschreibung ausländische Fahrerlaubnis / Dienstfahrerlaubnis",
         service="Umschreibung ausländischer Führerschein (sonstige Staaten)",
         quantity=1
@@ -83,6 +103,8 @@ async def main():
     print(f"Status: {result.status}")
     print(f"Available: {result.available}")
     print(f"Appointments found: {len(result.appointments)}")
+
+    await checker.cleanup()
 
 asyncio.run(main())
 ```
@@ -124,13 +146,28 @@ services:
 
 ```
 termin_checker/
-├── appointment_checker.py          # Main refactored checker module
-├── dusseldorf_termin_checker_test_copy.py  # Original working version
-├── config.yaml                     # Configuration file
-├── .env.example                    # Environment variables template
-├── requirements.txt                # Python dependencies
-├── pyproject.toml                  # Poetry configuration
-├── screenshots/                    # Screenshot output directory
+├── src/
+│   ├── bot/                        # Telegram bot module
+│   │   ├── main.py                 # Bot entry point
+│   │   └── handlers.py             # Command handlers
+│   ├── core/                       # Core functionality
+│   │   ├── appointment_checker.py  # Main checker logic
+│   │   ├── models.py               # Database models
+│   │   └── database.py             # Database management
+│   ├── services/                   # Business logic layer
+│   │   ├── check_service.py        # Check operations
+│   │   ├── user_service.py         # User management
+│   │   ├── subscription_service.py # Subscription management
+│   │   ├── notification_service.py # Notifications
+│   │   └── scheduler.py            # Periodic checks
+│   └── utils/                      # Utility modules
+├── tests/                          # Test files
+├── docs/                           # Documentation
+├── logs/                           # Log files
+├── screenshots/                    # Screenshot output
+├── config.yaml                     # Configuration
+├── .env.example                    # Environment template
+├── requirements.txt                # Dependencies
 └── README.md                       # This file
 ```
 
@@ -302,17 +339,18 @@ LOG_LEVEL=DEBUG
 - [x] Structured logging
 - [x] Error handling
 
-### Phase 2: Multi-User System (In Progress)
-- [ ] PostgreSQL/SQLite database
-- [ ] User management
-- [ ] Subscription system
-- [ ] FastAPI service layer
+### Phase 2: Multi-User System ✅
+- [x] PostgreSQL/SQLite database
+- [x] User management
+- [x] Subscription system
+- [x] Service layer
 
-### Phase 3: Telegram Bot
-- [ ] Bot commands (`/start`, `/subscribe`, `/check`)
-- [ ] Notification system
-- [ ] Multi-user support
-- [ ] Conversation flows
+### Phase 3: Telegram Bot ✅
+- [x] Bot commands (`/start`, `/subscribe`, `/check`, `/list`, `/unsubscribe`)
+- [x] Notification system
+- [x] Multi-user support
+- [x] Interactive inline keyboards
+- [x] Scheduled checks with APScheduler
 
 ### Phase 4: Production Deployment
 - [ ] Docker containerization

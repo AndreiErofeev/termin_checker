@@ -15,7 +15,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 
-from models import Base, Service, SystemConfig
+from .models import Base, Service, SystemConfig
 
 logger = logging.getLogger(__name__)
 
