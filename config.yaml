@@ -1,0 +1,76 @@
+# Düsseldorf Appointment Checker Configuration
+
+# Application settings
+app:
+  name: "Düsseldorf Appointment Checker"
+  version: "1.0.0"
+  debug: true
+
+# Browser settings
+browser:
+  headless: false  # Set to true for production
+  slow_mo: 300     # Milliseconds delay between actions (0 for production)
+  timeout: 30000   # Default timeout in milliseconds
+
+# Screenshot settings
+screenshots:
+  enabled: true
+  directory: "screenshots"
+  full_page: true
+  save_on_error: true
+
+# Website configuration
+website:
+  base_url: "https://termine.duesseldorf.de/select2?md=3"
+  locale: "de-DE"
+  timezone: "Europe/Berlin"
+
+# Services to check
+services:
+  - category: "Umschreibung ausländische Fahrerlaubnis / Dienstfahrerlaubnis"
+    service: "Umschreibung ausländischer Führerschein (sonstige Staaten)"
+    quantity: 1
+    enabled: true
+
+  # Add more services as needed
+  # - category: "Another Category"
+  #   service: "Another Service"
+  #   quantity: 1
+  #   enabled: false
+
+# Scheduling (for future automation)
+scheduler:
+  default_interval_hours: 1
+  min_interval_minutes: 15
+  max_concurrent_checks: 3
+
+# Notification settings (for future Telegram bot)
+notifications:
+  enabled: false
+  notify_on_found: true
+  notify_on_error: false
+  include_screenshot: true
+
+# Database settings (for future multi-user system)
+database:
+  type: "sqlite"  # sqlite or postgresql
+  path: "appointments.db"  # For SQLite
+  # For PostgreSQL (uncomment and configure)
+  # host: "localhost"
+  # port: 5432
+  # name: "termin_checker"
+  # user: "postgres"
+  # password: "password"
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "appointment_checker.log"
+  console: true
+
+# Rate limiting (to avoid being blocked)
+rate_limiting:
+  enabled: true
+  requests_per_hour: 20
+  delay_between_checks_seconds: 180  # 3 minutes minimum between checks

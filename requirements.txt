@@ -1,0 +1,48 @@
+# Core dependencies
+playwright>=1.55.0
+
+# Configuration management
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# Database (Phase 2)
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+
+# Future dependencies (uncomment when needed)
+
+# For Telegram bot
+# python-telegram-bot>=22.3.0
+
+# For web API
+# fastapi>=0.115.0
+# uvicorn[standard]>=0.32.0
+# pydantic>=2.10.0
+
+# For database
+# sqlalchemy>=2.0.36
+# alembic>=1.14.0
+# psycopg2-binary>=2.9.10  # For PostgreSQL
+# asyncpg>=0.30.0  # Async PostgreSQL driver
+
+# For task scheduling
+# celery>=5.4.0
+# redis>=5.2.0
+# celery-beat>=2.7.0
+# flower>=2.0.1  # Celery monitoring
+
+# For logging and monitoring
+# sentry-sdk>=2.19.0
+# prometheus-client>=0.21.0
+
+# Utilities
+# httpx>=0.28.0  # For async HTTP requests
+# python-dateutil>=2.9.0
+
+# Development dependencies
+# pytest>=8.3.0
+# pytest-asyncio>=0.24.0
+# pytest-playwright>=0.6.2
+# black>=24.10.0
+# ruff>=0.8.0
+# mypy>=1.14.0
