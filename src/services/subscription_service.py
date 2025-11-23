@@ -112,17 +112,14 @@ class SubscriptionService:
             List of Subscription objects
         """
         with self.db.get_session() as session:
-            query = session.query(Subscription).filter(Subscription.user_id == user_id)
+            query = session.query(Subscription).options(
+                joinedload(Subscription.service)
+            ).filter(Subscription.user_id == user_id)
 
             if active_only:
                 query = query.filter(Subscription.active == True)
 
             subscriptions = query.all()
-
-            # Refresh to load relationships
-            for sub in subscriptions:
-                session.refresh(sub)
-
             return subscriptions
 
     def get_subscription(self, subscription_id: int) -> Optional[Subscription]:
@@ -136,12 +133,12 @@ class SubscriptionService:
             Subscription object or None
         """
         with self.db.get_session() as session:
-            subscription = session.query(Subscription).filter(
+            subscription = session.query(Subscription).options(
+                joinedload(Subscription.service),
+                joinedload(Subscription.user)
+            ).filter(
                 Subscription.id == subscription_id
             ).first()
-
-            if subscription:
-                session.refresh(subscription)
 
             return subscription
 
@@ -175,7 +172,12 @@ class SubscriptionService:
                         setattr(subscription, key, value)
 
                 session.commit()
-                session.refresh(subscription)
+
+                # Re-fetch with eager loading
+                subscription = session.query(Subscription).options(
+                    joinedload(Subscription.service),
+                    joinedload(Subscription.user)
+                ).filter(Subscription.id == subscription_id).first()
 
                 logger.info(f"Updated subscription {subscription_id}")
                 return subscription
@@ -221,13 +223,12 @@ class SubscriptionService:
             List of active Subscription objects
         """
         with self.db.get_session() as session:
-            subscriptions = session.query(Subscription).filter(
+            subscriptions = session.query(Subscription).options(
+                joinedload(Subscription.service),
+                joinedload(Subscription.user)
+            ).filter(
                 Subscription.active == True
             ).all()
-
-            # Refresh to load relationships
-            for sub in subscriptions:
-                session.refresh(sub)
 
             return subscriptions
 
@@ -243,7 +244,10 @@ class SubscriptionService:
         with self.db.get_session() as session:
             now = datetime.now()
 
-            subscriptions = session.query(Subscription).filter(
+            subscriptions = session.query(Subscription).options(
+                joinedload(Subscription.service),
+                joinedload(Subscription.user)
+            ).filter(
                 Subscription.active == True
             ).all()
 
@@ -258,9 +262,5 @@ class SubscriptionService:
                     time_since_check = now - sub.last_checked_at
                     if time_since_check >= timedelta(hours=sub.interval_hours):
                         due_subscriptions.append(sub)
-
-            # Refresh relationships
-            for sub in due_subscriptions:
-                session.refresh(sub)
 
             return due_subscriptions
