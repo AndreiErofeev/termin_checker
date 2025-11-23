@@ -76,8 +76,10 @@ class UserService:
                 logger.info(f"Created new user {telegram_id}")
 
             session.commit()
-            session.refresh(user)
-            # Expunge from session so it can be used outside with loaded attributes
+            # Get the ID if it's a new user
+            user_id = user.id
+            # Re-fetch to get fresh data without expiration issues
+            user = session.query(User).filter(User.id == user_id).first()
             session.expunge(user)
             return user
 
@@ -94,7 +96,7 @@ class UserService:
         with self.db.get_session() as session:
             user = session.query(User).filter(User.telegram_id == telegram_id).first()
             if user:
-                session.refresh(user)
+                session.expunge(user)
             return user
 
     def get_user_stats(self, user_id: int) -> Dict[str, Any]:
