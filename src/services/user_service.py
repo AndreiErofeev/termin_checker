@@ -77,6 +77,8 @@ class UserService:
 
             session.commit()
             session.refresh(user)
+            # Access plan to load it before session closes
+            _ = user.plan
             return user
 
     def get_user_by_telegram_id(self, telegram_id: int) -> Optional[User]:
