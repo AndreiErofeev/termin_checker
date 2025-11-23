@@ -10,6 +10,8 @@ from datetime import datetime
 from typing import Optional
 from pathlib import Path
 
+from sqlalchemy.orm import joinedload
+
 from ..core.appointment_checker import AppointmentChecker, CheckResult as CheckerResult
 from ..core.database import Database
 from ..core.models import Check, Appointment, Subscription, CheckStatus
@@ -41,9 +43,12 @@ class CheckService:
             Check object with results, or None if error
         """
         try:
-            # Load subscription
+            # Load subscription with relationships
             with self.db.get_session() as session:
-                subscription = session.query(Subscription).filter(
+                subscription = session.query(Subscription).options(
+                    joinedload(Subscription.service),
+                    joinedload(Subscription.user)
+                ).filter(
                     Subscription.id == subscription_id,
                     Subscription.active == True
                 ).first()
@@ -107,6 +112,11 @@ class CheckService:
                     service.last_appointments_at = check.checked_at
 
                 session.commit()
+
+                # Re-fetch check with appointments loaded
+                check = session.query(Check).options(
+                    joinedload(Check.appointments)
+                ).filter(Check.id == check.id).first()
 
                 logger.info(
                     f"Check completed: {check.status.value}, "

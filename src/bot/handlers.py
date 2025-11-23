@@ -106,7 +106,7 @@ class BotHandlers:
 
         for idx, sub in enumerate(subscriptions, 1):
             service = sub.service
-            last_check = sub.last_checked.strftime("%Y-%m-%d %H:%M") if sub.last_checked else "Never"
+            last_check = sub.last_checked_at.strftime("%Y-%m-%d %H:%M") if sub.last_checked_at else "Never"
 
             message += (
                 f"{idx}. *{service.service_name}*\n"
