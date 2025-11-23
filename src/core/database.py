@@ -196,7 +196,7 @@ class Database:
     def get_stats(self) -> dict:
         """Get database statistics"""
         with self.get_session() as session:
-            from models import User, Service, Subscription, Check, Appointment
+            from .models import User, Service, Subscription, Check, Appointment
 
             stats = {
                 "users": session.query(User).count(),

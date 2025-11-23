@@ -376,9 +376,13 @@ sudo apt-get install -y \
     libxfixes3 \
     libxrandr2 \
     libgbm1 \
-    libasound2 \
+    libasound2t64 \
     libxshmfence1 \
     libglib2.0-0
+
+# Note: On Ubuntu 24.04+, libasound2 was renamed to libasound2t64
+# If you get "has no installation candidate" error, the package may already be installed
+# or use: sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
 ```
 
 ---
