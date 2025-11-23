@@ -8,6 +8,8 @@ import logging
 from typing import List, Optional
 from datetime import datetime
 
+from sqlalchemy.orm import joinedload
+
 from ..core.database import Database
 from ..core.models import Subscription, Service, User
 
@@ -64,11 +66,14 @@ class SubscriptionService:
                         existing.notify_telegram = notify_telegram
                         session.commit()
                         logger.info(f"Reactivated subscription {existing.id}")
-                        session.refresh(existing)
-                        return existing
                     else:
                         logger.warning(f"Subscription already exists for user {user_id}, service {service_id}")
-                        return existing
+
+                    # Re-fetch with eager loading of service relationship
+                    existing = session.query(Subscription).options(
+                        joinedload(Subscription.service)
+                    ).filter(Subscription.id == existing.id).first()
+                    return existing
 
                 # Create new subscription
                 subscription = Subscription(
@@ -82,7 +87,11 @@ class SubscriptionService:
 
                 session.add(subscription)
                 session.commit()
-                session.refresh(subscription)
+
+                # Re-fetch with eager loading of service relationship
+                subscription = session.query(Subscription).options(
+                    joinedload(Subscription.service)
+                ).filter(Subscription.id == subscription.id).first()
 
                 logger.info(f"Created subscription {subscription.id} for user {user_id}")
                 return subscription
