@@ -77,8 +77,8 @@ class UserService:
 
             session.commit()
             session.refresh(user)
-            # Access plan to load it before session closes
-            _ = user.plan
+            # Expunge from session so it can be used outside with loaded attributes
+            session.expunge(user)
             return user
 
     def get_user_by_telegram_id(self, telegram_id: int) -> Optional[User]:
