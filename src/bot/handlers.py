@@ -244,6 +244,15 @@ class BotHandlers:
             await query.edit_message_text("❌ Cancelled.")
             return
 
+        if data == "back_depts":
+            await self._show_departments(query)
+            return
+
+        if data == "back_categories":
+            # We don't store the dept in callback state, so re-show dept list
+            await self._show_departments(query)
+            return
+
         # Handle department selection
         if data.startswith("dept_"):
             dept = data[5:]
@@ -268,6 +277,31 @@ class BotHandlers:
         elif data.startswith("check_"):
             subscription_id = int(data[6:])
             await self._handle_manual_check(query, subscription_id)
+
+    async def _show_departments(self, query):
+        """Show department selection (used by subscribe and Back button)"""
+        with self.db.get_session() as session:
+            services = session.query(Service).filter(Service.active == True).all()
+
+            if not services:
+                await query.edit_message_text("❌ No services available at the moment.")
+                return
+
+            depts: dict[str, int] = {}
+            for service in services:
+                dept = service.department or "Other"
+                depts[dept] = depts.get(dept, 0) + 1
+
+            keyboard = [
+                [InlineKeyboardButton(f"{dept} ({count})", callback_data=f"dept_{dept[:55]}")]
+                for dept, count in sorted(depts.items())
+            ]
+
+            await query.edit_message_text(
+                "📝 *Select a department:*",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode='Markdown',
+            )
 
     async def _show_categories_in_dept(self, query, dept: str):
         """Show categories within a department"""
