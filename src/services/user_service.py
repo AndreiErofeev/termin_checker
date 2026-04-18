@@ -131,7 +131,7 @@ class UserService:
                 'last_activity': user.last_activity.isoformat() if user.last_activity else None
             }
 
-    def update_plan(self, user_id: int, plan) -> bool:
+    def update_plan(self, user_id: int, plan: UserPlan) -> bool:
         try:
             with self.db.get_session() as session:
                 user = session.query(User).filter_by(id=user_id).first()

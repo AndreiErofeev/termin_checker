@@ -419,8 +419,10 @@ class BotHandlers:
     async def successful_payment_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         db_user = self.user_service.get_user_by_telegram_id(user.id)
-        if db_user:
-            self.user_service.update_plan(db_user.id, UserPlan.PREMIUM)
+        if not db_user:
+            await update.message.reply_text("❌ Could not activate Premium — user not found. Please contact support.")
+            return
+        self.user_service.update_plan(db_user.id, UserPlan.PREMIUM)
         await update.message.reply_text(
             "🎉 *Premium activated!*\n\n"
             "You now have unlimited subscriptions.\n"
