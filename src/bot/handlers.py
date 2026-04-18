@@ -6,12 +6,12 @@ Handles all bot commands and user interactions.
 
 import logging
 from typing import List
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
 from telegram.ext import ContextTypes
 
 from ..core.database import Database
 from ..services import UserService, SubscriptionService, CheckService
-from ..core.models import Service
+from ..core.models import Service, UserPlan
 
 logger = logging.getLogger(__name__)
 
@@ -314,7 +314,6 @@ class BotHandlers:
             await query.edit_message_text("❌ User not found.")
             return
 
-        from ..core.models import UserPlan
         is_free = db_user.plan == UserPlan.FREE
 
         if is_free:
@@ -393,3 +392,68 @@ class BotHandlers:
         except Exception as e:
             logger.error(f"Error in manual check: {e}", exc_info=True)
             await query.edit_message_text(f"❌ Error: {str(e)}")
+
+    async def premium_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = update.effective_user
+        db_user = self.user_service.get_user_by_telegram_id(user.id)
+        if not db_user:
+            await update.message.reply_text("❌ Please use /start first.")
+            return
+
+        if db_user.plan != UserPlan.FREE:
+            await update.message.reply_text("✅ You already have Premium!")
+            return
+
+        await context.bot.send_invoice(
+            chat_id=user.id,
+            title="Termin Checker Premium",
+            description="Unlimited subscriptions + custom check schedule",
+            payload="premium_upgrade",
+            currency="XTR",
+            prices=[LabeledPrice("Premium", 50)],
+        )
+
+    async def precheckout_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.pre_checkout_query.answer(ok=True)
+
+    async def successful_payment_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = update.effective_user
+        db_user = self.user_service.get_user_by_telegram_id(user.id)
+        if db_user:
+            self.user_service.update_plan(db_user.id, UserPlan.PREMIUM)
+        await update.message.reply_text(
+            "🎉 *Premium activated!*\n\n"
+            "You now have unlimited subscriptions.\n"
+            "Use /setschedule <hours> to customize check frequency.",
+            parse_mode="Markdown",
+        )
+
+    async def setschedule_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = update.effective_user
+        db_user = self.user_service.get_user_by_telegram_id(user.id)
+        if not db_user:
+            await update.message.reply_text("❌ Please use /start first.")
+            return
+
+        if db_user.plan == UserPlan.FREE:
+            await update.message.reply_text(
+                "⚠️ Custom schedules are a Premium feature.\nUse /premium to upgrade."
+            )
+            return
+
+        if not context.args or not context.args[0].isdigit():
+            await update.message.reply_text("Usage: /setschedule <hours>\nExample: /setschedule 2")
+            return
+
+        hours = int(context.args[0])
+        if hours < 1 or hours > 24:
+            await update.message.reply_text("❌ Hours must be between 1 and 24.")
+            return
+
+        subscriptions = self.subscription_service.get_user_subscriptions(db_user.id)
+        for sub in subscriptions:
+            self.subscription_service.update_subscription(sub.id, interval_hours=hours)
+
+        await update.message.reply_text(
+            f"✅ All your subscriptions will now check every {hours}h."
+        )

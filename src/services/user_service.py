@@ -131,7 +131,20 @@ class UserService:
                 'last_activity': user.last_activity.isoformat() if user.last_activity else None
             }
 
-    def update_plan(self, telegram_id: int, plan: UserPlan) -> bool:
+    def update_plan(self, user_id: int, plan) -> bool:
+        try:
+            with self.db.get_session() as session:
+                user = session.query(User).filter_by(id=user_id).first()
+                if not user:
+                    return False
+                user.plan = plan
+                session.commit()
+                return True
+        except Exception as e:
+            logger.error("Error updating plan for user %d: %s", user_id, e)
+            return False
+
+    def update_plan_by_telegram_id(self, telegram_id: int, plan: UserPlan) -> bool:
         """
         Update user's subscription plan
 
