@@ -1,0 +1,19 @@
+[Unit]
+Description=Termin Checker Telegram Bot
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/var/app
+EnvironmentFile=/var/app/.env
+Environment=PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ExecStart=/usr/bin/python3.12 -m src.bot.main
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
