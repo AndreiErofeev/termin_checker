@@ -308,35 +308,47 @@ class BotHandlers:
             )
 
     async def _create_subscription(self, query, service_id: int):
-        """Create subscription for user"""
         user = query.from_user
-
-        # Get user from database
         db_user = self.user_service.get_user_by_telegram_id(user.id)
         if not db_user:
             await query.edit_message_text("❌ User not found.")
             return
 
-        # Create subscription
+        from ..core.models import UserPlan
+        is_free = db_user.plan == UserPlan.FREE
+
+        if is_free:
+            existing = self.subscription_service.get_user_subscriptions(db_user.id)
+            if len(existing) >= 3:
+                await query.edit_message_text(
+                    "❌ Free plan allows up to 3 subscriptions.\n\n"
+                    "Use /premium to upgrade and get unlimited subscriptions."
+                )
+                return
+            interval_hours = 12
+        else:
+            interval_hours = 1  # premium default, can be changed with /setschedule
+
         subscription = self.subscription_service.create_subscription(
             user_id=db_user.id,
             service_id=service_id,
-            interval_hours=1,
-            quantity=1
+            interval_hours=interval_hours,
+            quantity=1,
         )
 
         if subscription:
             service = subscription.service
+            freq = "twice daily" if is_free else f"every {interval_hours}h"
             await query.edit_message_text(
-                f"✅ *Subscription created!*\n\n"
+                f"✅ *Subscribed!*\n\n"
                 f"Service: {service.service_name}\n"
                 f"Category: {service.category}\n"
-                f"Check interval: Every {subscription.interval_hours}h\n\n"
-                f"You'll receive notifications when appointments are available.",
-                parse_mode='Markdown'
+                f"Checks: {freq}\n\n"
+                f"You'll be notified when appointments open.",
+                parse_mode="Markdown",
             )
         else:
-            await query.edit_message_text("❌ Failed to create subscription.")
+            await query.edit_message_text("❌ Already subscribed to this service.")
 
     async def _handle_unsubscribe(self, query, subscription_id: int):
         """Handle unsubscribe action"""
