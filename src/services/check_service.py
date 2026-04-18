@@ -68,7 +68,12 @@ class CheckService:
 
                 # Initialize checker if needed
                 if not self.checker:
-                    self.checker = AppointmentChecker()
+                    self.checker = AppointmentChecker(config={
+                        'base_url': service.base_url,
+                        'headless': True,
+                    })
+                else:
+                    self.checker.config['base_url'] = service.base_url
 
                 # Run the check
                 result: CheckerResult = await self.checker.check_appointments(
@@ -115,7 +120,9 @@ class CheckService:
 
                 # Re-fetch check with appointments loaded
                 check = session.query(Check).options(
-                    joinedload(Check.appointments)
+                    joinedload(Check.appointments),
+                    joinedload(Check.subscription).joinedload(Subscription.service),
+                    joinedload(Check.subscription).joinedload(Subscription.user),
                 ).filter(Check.id == check.id).first()
 
                 logger.info(
