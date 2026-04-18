@@ -51,13 +51,13 @@ class SchedulerService:
 
         logger.info("Starting scheduler...")
 
-        # Add main check job - runs every 5 minutes
+        # Add main check job - runs every hour
         self.scheduler.add_job(
             self._check_all_due_subscriptions,
-            trigger=IntervalTrigger(minutes=5),
+            trigger=IntervalTrigger(hours=1),
             id='check_subscriptions',
             name='Check due subscriptions',
-            replace_existing=True
+            replace_existing=True,
         )
 
         self.scheduler.start()

@@ -76,11 +76,11 @@ class AppointmentChecker:
     # Default configuration
     DEFAULT_CONFIG = {
         'base_url': 'https://termine.duesseldorf.de/select2?md=3',
-        'headless': False,
-        'slow_mo': 300,
+        'headless': True,
+        'slow_mo': 0,
         'timeout': 30000,
         'screenshot_dir': 'screenshots',
-        'debug': True
+        'debug': False,
     }
 
     def __init__(self, config: Optional[Dict[str, Any]] = None):
@@ -119,7 +119,13 @@ class AppointmentChecker:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(
                     headless=self.config['headless'],
-                    slow_mo=self.config['slow_mo']
+                    slow_mo=self.config['slow_mo'],
+                    args=[
+                        "--no-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-gpu",
+                        "--single-process",
+                    ],
                 )
 
                 page = await browser.new_page()
