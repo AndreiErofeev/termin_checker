@@ -37,7 +37,20 @@ def main():
     handlers = BotHandlers(db)
     scheduler = SchedulerService(db, bot_token)
 
-    app = Application.builder().token(bot_token).build()
+    async def post_init(application: Application) -> None:
+        scheduler.start()
+        logger.info("Scheduler started")
+
+    async def post_stop(application: Application) -> None:
+        scheduler.stop()
+
+    app = (
+        Application.builder()
+        .token(bot_token)
+        .post_init(post_init)
+        .post_stop(post_stop)
+        .build()
+    )
 
     app.add_handler(CommandHandler("start", handlers.start_command))
     app.add_handler(CommandHandler("help", handlers.help_command))
@@ -51,13 +64,7 @@ def main():
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, handlers.successful_payment_callback))
     app.add_handler(CallbackQueryHandler(handlers.button_callback))
 
-    scheduler.start()
-    logger.info("Scheduler started")
-
-    try:
-        app.run_polling(allowed_updates=["message", "callback_query"])
-    finally:
-        scheduler.stop()
+    app.run_polling(allowed_updates=["message", "callback_query"])
 
 
 if __name__ == "__main__":
