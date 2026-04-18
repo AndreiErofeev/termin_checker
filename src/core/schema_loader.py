@@ -27,10 +27,12 @@ def upsert_services(db: Database, schema: dict) -> int:
                         category=category, service_name=service_name
                     ).first()
                     if existing:
+                        existing.department = dept_name
                         existing.base_url = base_url
                         existing.active = True
                     else:
                         session.add(Service(
+                            department=dept_name,
                             category=category,
                             service_name=service_name,
                             base_url=base_url,

@@ -76,6 +76,7 @@ class Service(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Service identification
+    department = Column(String(500), nullable=True)
     category = Column(String(500), nullable=False)
     service_name = Column(String(500), nullable=False)
 

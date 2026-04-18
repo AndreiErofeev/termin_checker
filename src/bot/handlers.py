@@ -130,7 +130,7 @@ class BotHandlers:
             await update.message.reply_text("❌ User not found. Please use /start first.")
             return
 
-        # Get available services
+        # Get available services grouped by department
         with self.db.get_session() as session:
             services = session.query(Service).filter(Service.active == True).all()
 
@@ -138,31 +138,20 @@ class BotHandlers:
                 await update.message.reply_text("❌ No services available at the moment.")
                 return
 
-            # Group services by category
-            categories = {}
+            depts: dict[str, int] = {}
             for service in services:
-                if service.category not in categories:
-                    categories[service.category] = []
-                categories[service.category].append(service)
+                dept = service.department or "Other"
+                depts[dept] = depts.get(dept, 0) + 1
 
-            # Create inline keyboard with categories
-            keyboard = []
-            for category in sorted(categories.keys()):
-                service_count = len(categories[category])
-                keyboard.append([
-                    InlineKeyboardButton(
-                        f"{category} ({service_count})",
-                        callback_data=f"cat_{category[:50]}"
-                    )
-                ])
-
-            reply_markup = InlineKeyboardMarkup(keyboard)
+            keyboard = [
+                [InlineKeyboardButton(f"{dept} ({count})", callback_data=f"dept_{dept[:55]}")]
+                for dept, count in sorted(depts.items())
+            ]
 
             await update.message.reply_text(
-                "📝 *Select a category:*\n\n"
-                "Choose a service category to subscribe to:",
-                reply_markup=reply_markup,
-                parse_mode='Markdown'
+                "📝 *Select a department:*",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode='Markdown',
             )
 
     async def unsubscribe_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -255,8 +244,13 @@ class BotHandlers:
             await query.edit_message_text("❌ Cancelled.")
             return
 
+        # Handle department selection
+        if data.startswith("dept_"):
+            dept = data[5:]
+            await self._show_categories_in_dept(query, dept)
+
         # Handle category selection
-        if data.startswith("cat_"):
+        elif data.startswith("cat_"):
             category = data[4:]
             await self._show_services_in_category(query, category)
 
@@ -274,6 +268,34 @@ class BotHandlers:
         elif data.startswith("check_"):
             subscription_id = int(data[6:])
             await self._handle_manual_check(query, subscription_id)
+
+    async def _show_categories_in_dept(self, query, dept: str):
+        """Show categories within a department"""
+        with self.db.get_session() as session:
+            services = session.query(Service).filter(
+                Service.department.like(f"{dept}%"),
+                Service.active == True,
+            ).all()
+
+            if not services:
+                await query.edit_message_text("❌ No services found.")
+                return
+
+            cats: dict[str, int] = {}
+            for service in services:
+                cats[service.category] = cats.get(service.category, 0) + 1
+
+            keyboard = [
+                [InlineKeyboardButton(f"{cat} ({count})", callback_data=f"cat_{cat[:55]}")]
+                for cat, count in sorted(cats.items())
+            ]
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="back_depts")])
+
+            await query.edit_message_text(
+                f"📝 *{dept}*\n\nSelect a category:",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown",
+            )
 
     async def _show_services_in_category(self, query, category: str):
         """Show services in selected category"""
