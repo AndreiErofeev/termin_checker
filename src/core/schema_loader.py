@@ -37,7 +37,6 @@ def upsert_services(db: Database, schema: dict) -> int:
                             active=True,
                         ))
                     count += 1
-        session.commit()
 
     logger.info("Upserted %d services from schema", count)
     return count
