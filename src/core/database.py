@@ -92,6 +92,14 @@ class Database:
             except Exception:
                 pass  # Column already exists
 
+        with self.engine.connect() as conn:
+            conn.execute(sqlalchemy.text(
+                "CREATE TABLE IF NOT EXISTS bot_settings "
+                "(key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+            ))
+            conn.commit()
+            logger.info("Migration applied: bot_settings table ensured")
+
     def drop_tables(self):
         """Drop all database tables (USE WITH CAUTION!)"""
         logger.warning("Dropping all database tables...")

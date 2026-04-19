@@ -71,7 +71,7 @@ STRINGS = {
         ),
         "check_error": "❌ Error: {msg}",
         "checking": "🔍 Checking for appointments… Please wait.",
-        "premium_unavailable": "🚧 Premium subscriptions are temporarily unavailable. Check back soon!",
+        "premium_unavailable": "🚧 Premium subscriptions are temporarily unavailable (coming soon). Check back soon!",
         "use_start": "❌ Please use /start first.",
         "already_premium": "✅ You already have Premium!",
         "premium_no_user": "❌ Could not activate Premium — user not found.",
@@ -85,6 +85,10 @@ STRINGS = {
         "schedule_updated": "✅ All subscriptions will now check every {n}h.",
         "language_choose": "🌐 *Choose your language:*",
         "language_set": "✅ Language updated.",
+        "ad_premium_upsell": (
+            "⭐ *Free plan:* checks every 12h. Premium checks every 1h — catch slots 12× faster. /premium"
+        ),
+        "btn_get_premium": "⭐ Get Premium (coming soon)",
     },
     "de": {
         "welcome": (
@@ -156,7 +160,7 @@ STRINGS = {
         ),
         "check_error": "❌ Fehler: {msg}",
         "checking": "🔍 Termine werden geprüft… Bitte warten.",
-        "premium_unavailable": "🚧 Premium-Abonnements sind vorübergehend nicht verfügbar.",
+        "premium_unavailable": "🚧 Premium-Abonnements sind vorübergehend nicht verfügbar (demnächst).",
         "use_start": "❌ Bitte zuerst /start verwenden.",
         "already_premium": "✅ Sie haben bereits Premium!",
         "premium_no_user": "❌ Premium konnte nicht aktiviert werden — Benutzer nicht gefunden.",
@@ -170,6 +174,10 @@ STRINGS = {
         "schedule_updated": "✅ Alle Abonnements prüfen jetzt alle {n}h.",
         "language_choose": "🌐 *Sprache wählen:*",
         "language_set": "✅ Sprache gespeichert.",
+        "ad_premium_upsell": (
+            "⭐ *Kostenlos:* Prüfung alle 12h. Premium prüft stündlich — 12× schneller. /premium"
+        ),
+        "btn_get_premium": "⭐ Premium holen (demnächst)",
     },
     "ru": {
         "welcome": (
@@ -241,7 +249,7 @@ STRINGS = {
         ),
         "check_error": "❌ Ошибка: {msg}",
         "checking": "🔍 Проверяю доступность… Подождите.",
-        "premium_unavailable": "🚧 Premium-подписки временно недоступны.",
+        "premium_unavailable": "🚧 Premium-подписки временно недоступны (скоро).",
         "use_start": "❌ Сначала используйте /start.",
         "already_premium": "✅ У вас уже Premium!",
         "premium_no_user": "❌ Не удалось активировать Premium — пользователь не найден.",
@@ -255,6 +263,10 @@ STRINGS = {
         "schedule_updated": "✅ Все подписки теперь проверяются каждые {n}ч.",
         "language_choose": "🌐 *Выберите язык:*",
         "language_set": "✅ Язык сохранён.",
+        "ad_premium_upsell": (
+            "⭐ *Бесплатно:* проверка каждые 12ч. Premium — каждый час, в 12 раз чаще. /premium"
+        ),
+        "btn_get_premium": "⭐ Получить Premium (скоро)",
     },
     "uk": {
         "welcome": (
@@ -326,7 +338,7 @@ STRINGS = {
         ),
         "check_error": "❌ Помилка: {msg}",
         "checking": "🔍 Перевіряю доступність… Зачекайте.",
-        "premium_unavailable": "🚧 Premium-підписки тимчасово недоступні.",
+        "premium_unavailable": "🚧 Premium-підписки тимчасово недоступні (незабаром).",
         "use_start": "❌ Спочатку використайте /start.",
         "already_premium": "✅ У вас вже є Premium!",
         "premium_no_user": "❌ Не вдалося активувати Premium — користувача не знайдено.",
@@ -340,6 +352,10 @@ STRINGS = {
         "schedule_updated": "✅ Усі підписки тепер перевіряються кожні {n}г.",
         "language_choose": "🌐 *Оберіть мову:*",
         "language_set": "✅ Мову збережено.",
+        "ad_premium_upsell": (
+            "⭐ *Безкоштовно:* перевірка кожні 12год. Premium — щогодини, у 12 разів частіше. /premium"
+        ),
+        "btn_get_premium": "⭐ Отримати Premium (незабаром)",
     },
     "tr": {
         "welcome": (
@@ -411,7 +427,7 @@ STRINGS = {
         ),
         "check_error": "❌ Hata: {msg}",
         "checking": "🔍 Randevular kontrol ediliyor… Lütfen bekleyin.",
-        "premium_unavailable": "🚧 Premium abonelikler şu anda kullanılamıyor.",
+        "premium_unavailable": "🚧 Premium abonelikler şu anda kullanılamıyor (yakında).",
         "use_start": "❌ Önce /start kullanın.",
         "already_premium": "✅ Zaten Premium'sunuz!",
         "premium_no_user": "❌ Premium etkinleştirilemedi — kullanıcı bulunamadı.",
@@ -425,6 +441,10 @@ STRINGS = {
         "schedule_updated": "✅ Tüm abonelikler artık her {n} saatte bir kontrol edilecek.",
         "language_choose": "🌐 *Dil seçin:*",
         "language_set": "✅ Dil kaydedildi.",
+        "ad_premium_upsell": (
+            "⭐ *Ücretsiz:* 12 saatte bir kontrol. Premium saatte bir kontrol — 12× daha hızlı. /premium"
+        ),
+        "btn_get_premium": "⭐ Premium Al (yakında)",
     },
 }
 
