@@ -233,6 +233,10 @@ class BotHandlers:
         if data == "cancel":
             await query.edit_message_text(t(lang, "cancelled"))
 
+        elif data == "get_premium":
+            # TODO: remove when premium goes live — trigger invoice instead
+            await query.edit_message_text(t(lang, "premium_unavailable"))
+
         elif data == "bd":
             await self._show_departments(query, lang)
 
@@ -352,7 +356,11 @@ class BotHandlers:
         if is_free:
             existing = self.subscription_service.get_user_subscriptions(db_user.id)
             if len(existing) >= 3:
-                await query.edit_message_text(t(lang, "plan_limit"))
+                btn = InlineKeyboardButton(t(lang, "btn_get_premium"), callback_data="get_premium")
+                await query.edit_message_text(
+                    t(lang, "plan_limit"),
+                    reply_markup=InlineKeyboardMarkup([[btn]]),
+                )
                 return
             interval_hours = 12
         else:
@@ -421,6 +429,7 @@ class BotHandlers:
     async def premium_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         db_user = self.user_service.get_user_by_telegram_id(update.effective_user.id)
         lang = db_user.language if db_user else "en"
+        # TODO: remove when premium goes live
         await update.message.reply_text(t(lang, "premium_unavailable"))
         return
 
@@ -462,7 +471,11 @@ class BotHandlers:
             return
         lang = db_user.language
         if db_user.plan == UserPlan.FREE:
-            await update.message.reply_text(t(lang, "premium_only"))
+            btn = InlineKeyboardButton(t(lang, "btn_get_premium"), callback_data="get_premium")
+            await update.message.reply_text(
+                t(lang, "premium_only"),
+                reply_markup=InlineKeyboardMarkup([[btn]]),
+            )
             return
         if not context.args or not context.args[0].isdigit():
             await update.message.reply_text(t(lang, "setschedule_usage"))
