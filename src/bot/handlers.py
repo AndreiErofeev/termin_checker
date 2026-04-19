@@ -267,6 +267,11 @@ class BotHandlers:
                 await query.edit_message_text("❌ No services found in this department.")
                 return
 
+            # Skip category screen when there's only one category
+            if len(cats) == 1:
+                await self._show_services(query, dept_idx, 0)
+                return
+
             keyboard = []
             for j, (cat_name, count) in enumerate(cats):
                 label = cat_name if len(cat_name) <= 55 else cat_name[:53] + "…"
