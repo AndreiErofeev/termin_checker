@@ -269,7 +269,7 @@ class BotHandlers:
 
             # Skip category screen when there's only one category
             if len(cats) == 1:
-                await self._show_services(query, dept_idx, 0)
+                await self._show_services(query, dept_idx, 0, back="bd")
                 return
 
             keyboard = []
@@ -287,7 +287,7 @@ class BotHandlers:
                 parse_mode="Markdown",
             )
 
-    async def _show_services(self, query, dept_idx: int, cat_idx: int):
+    async def _show_services(self, query, dept_idx: int, cat_idx: int, back: str | None = None):
         with self.db.get_session() as session:
             depts = self._sorted_depts(session)
             if dept_idx >= len(depts):
@@ -314,7 +314,7 @@ class BotHandlers:
             for service in services[:50]:
                 label = service.service_name if len(service.service_name) <= 60 else service.service_name[:58] + "…"
                 keyboard.append([InlineKeyboardButton(label, callback_data=f"srv_{service.id}")])
-            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data=f"bc{dept_idx}")])
+            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data=back or f"bc{dept_idx}")])
 
             escaped_cat = cat_name.replace("*", "\\*").replace("_", "\\_")
             await query.edit_message_text(
