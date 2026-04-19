@@ -524,7 +524,10 @@ class BotHandlers:
                 "/admin users — list all users\n"
                 "/admin stats — usage statistics\n"
                 "/admin premium <telegram\\_id> — upgrade user\n"
-                "/admin free <telegram\\_id> — downgrade user",
+                "/admin free <telegram\\_id> — downgrade user\n"
+                "/admin ad set <text> — set custom ad for free users\n"
+                "/admin ad clear — revert to premium upsell\n"
+                "/admin ad show — show current ad text",
                 parse_mode="Markdown",
             )
             return
@@ -571,6 +574,37 @@ class BotHandlers:
                 f"✅ User `{target_id}` is now *{new_plan.value}*.",
                 parse_mode="Markdown",
             )
+
+        elif args[0] == "ad":
+            if len(args) >= 3 and args[1] == "set":
+                ad_text = " ".join(args[2:])
+                with self.db.get_session() as session:
+                    session.execute(sqlalchemy.text(
+                        "INSERT OR REPLACE INTO bot_settings (key, value) VALUES ('current_ad', :v)"
+                    ), {"v": ad_text})
+                    session.commit()
+                await update.message.reply_text(f"✅ Ad text set:\n\n{ad_text}")
+
+            elif len(args) == 2 and args[1] == "clear":
+                with self.db.get_session() as session:
+                    session.execute(sqlalchemy.text(
+                        "DELETE FROM bot_settings WHERE key = 'current_ad'"
+                    ))
+                    session.commit()
+                await update.message.reply_text("✅ Ad cleared — reverting to premium upsell.")
+
+            elif len(args) == 2 and args[1] == "show":
+                with self.db.get_session() as session:
+                    row = session.execute(sqlalchemy.text(
+                        "SELECT value FROM bot_settings WHERE key = 'current_ad'"
+                    )).fetchone()
+                if row:
+                    await update.message.reply_text(f"Current ad:\n\n{row[0]}")
+                else:
+                    await update.message.reply_text("No custom ad — showing premium upsell to free users.")
+
+            else:
+                await update.message.reply_text("Usage: /admin ad set <text> | clear | show")
 
         else:
             await update.message.reply_text("❌ Unknown command. Use /admin for help.")
