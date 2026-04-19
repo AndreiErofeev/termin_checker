@@ -6,6 +6,7 @@ Handles all bot commands and user interactions.
 
 import logging
 import os
+from zoneinfo import ZoneInfo
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
 from telegram.ext import ContextTypes
 
@@ -123,7 +124,7 @@ class BotHandlers:
         keyboard = []
         for idx, sub in enumerate(subscriptions, 1):
             service = sub.service
-            last_check = sub.last_checked_at.strftime("%d.%m.%Y %H:%M") if sub.last_checked_at else "Never"
+            last_check = sub.last_checked_at.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Europe/Berlin")).strftime("%d.%m.%Y %H:%M") if sub.last_checked_at else "Never"
             message += (
                 f"{idx}. *{service.service_name}*\n"
                 f"   {service.department or service.category}\n"
