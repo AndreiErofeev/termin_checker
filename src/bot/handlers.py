@@ -519,7 +519,9 @@ class BotHandlers:
         )
 
     async def admin_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        logger.info("admin_command called: user_id=%s admin_id=%s", update.effective_user.id, self.admin_id)
         if not self.admin_id or update.effective_user.id != self.admin_id:
+            await update.message.reply_text(f"⛔ Not authorized. Your ID: {update.effective_user.id}")
             return
 
         args = context.args
