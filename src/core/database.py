@@ -79,6 +79,19 @@ class Database:
         Base.metadata.create_all(bind=self.engine)
         logger.info("Database tables created successfully")
 
+    def apply_migrations(self):
+        """Add any missing columns to existing tables (idempotent)."""
+        import sqlalchemy
+        with self.engine.connect() as conn:
+            try:
+                conn.execute(sqlalchemy.text(
+                    "ALTER TABLE users ADD COLUMN language VARCHAR(10) NOT NULL DEFAULT 'en'"
+                ))
+                conn.commit()
+                logger.info("Migration applied: users.language column added")
+            except Exception:
+                pass  # Column already exists
+
     def drop_tables(self):
         """Drop all database tables (USE WITH CAUTION!)"""
         logger.warning("Dropping all database tables...")

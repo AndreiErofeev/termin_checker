@@ -54,7 +54,7 @@ class User(Base):
     # Account settings
     plan = Column(SQLEnum(UserPlan), default=UserPlan.FREE, nullable=False)
     active = Column(Boolean, default=True, nullable=False)
-    language = Column(String(10), default="de", nullable=False)
+    language = Column(String(10), default="en", nullable=False)
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

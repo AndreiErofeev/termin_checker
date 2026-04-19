@@ -26,6 +26,7 @@ def main():
 
     db = init_database(f"sqlite:///{db_path}")
     db.create_tables()
+    db.apply_migrations()
 
     logger.info("Syncing service menu from S3...")
     try:
