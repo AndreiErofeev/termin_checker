@@ -5,13 +5,14 @@ Handles all bot commands and user interactions.
 """
 
 import logging
+import os
 from typing import List
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
 from telegram.ext import ContextTypes
 
 from ..core.database import Database
 from ..services import UserService, SubscriptionService, CheckService
-from ..core.models import Service, UserPlan
+from ..core.models import Service, UserPlan, User, Subscription
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class BotHandlers:
         self.user_service = UserService(db)
         self.subscription_service = SubscriptionService(db)
         self.check_service = CheckService(db)
+        self.admin_id = int(os.environ.get("ADMIN_TELEGRAM_ID", 0))
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command"""
@@ -515,3 +517,68 @@ class BotHandlers:
         await update.message.reply_text(
             f"✅ All your subscriptions will now check every {hours}h."
         )
+
+    async def admin_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not self.admin_id or update.effective_user.id != self.admin_id:
+            return
+
+        args = context.args
+
+        if not args:
+            await update.message.reply_text(
+                "*Admin commands:*\n"
+                "/admin users — list all users\n"
+                "/admin stats — usage statistics\n"
+                "/admin premium <telegram\\_id> — upgrade user\n"
+                "/admin free <telegram\\_id> — downgrade user",
+                parse_mode="Markdown",
+            )
+            return
+
+        if args[0] == "users":
+            with self.db.get_session() as session:
+                users = session.query(User).order_by(User.created_at.desc()).all()
+                if not users:
+                    await update.message.reply_text("No users yet.")
+                    return
+                lines = []
+                for u in users:
+                    sub_count = session.query(Subscription).filter_by(user_id=u.id).count()
+                    name = u.username or u.first_name or str(u.telegram_id)
+                    lines.append(f"`{u.telegram_id}` @{name} — {u.plan.value} — {sub_count} subs")
+                await update.message.reply_text(
+                    "*All users:*\n" + "\n".join(lines),
+                    parse_mode="Markdown",
+                )
+
+        elif args[0] == "stats":
+            with self.db.get_session() as session:
+                user_count = session.query(User).count()
+                premium_count = session.query(User).filter_by(plan=UserPlan.PREMIUM).count()
+                sub_count = session.query(Subscription).count()
+                await update.message.reply_text(
+                    f"*Stats:*\n"
+                    f"Users: {user_count} ({premium_count} premium)\n"
+                    f"Subscriptions: {sub_count}",
+                    parse_mode="Markdown",
+                )
+
+        elif args[0] in ("premium", "free") and len(args) > 1:
+            try:
+                target_id = int(args[1])
+            except ValueError:
+                await update.message.reply_text("❌ Invalid telegram_id — must be a number.")
+                return
+            target_user = self.user_service.get_user_by_telegram_id(target_id)
+            if not target_user:
+                await update.message.reply_text(f"❌ User {target_id} not found.")
+                return
+            new_plan = UserPlan.PREMIUM if args[0] == "premium" else UserPlan.FREE
+            self.user_service.update_plan(target_user.id, new_plan)
+            await update.message.reply_text(
+                f"✅ User `{target_id}` is now *{new_plan.value}*.",
+                parse_mode="Markdown",
+            )
+
+        else:
+            await update.message.reply_text("❌ Unknown command. Use /admin for help.")

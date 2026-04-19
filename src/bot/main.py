@@ -60,6 +60,7 @@ def main():
     app.add_handler(CommandHandler("check", handlers.check_command))
     app.add_handler(CommandHandler("premium", handlers.premium_command))
     app.add_handler(CommandHandler("setschedule", handlers.setschedule_command))
+    app.add_handler(CommandHandler("admin", handlers.admin_command))
     app.add_handler(PreCheckoutQueryHandler(handlers.precheckout_callback))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, handlers.successful_payment_callback))
     app.add_handler(CallbackQueryHandler(handlers.button_callback))
