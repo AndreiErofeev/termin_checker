@@ -177,6 +177,19 @@ class UserService:
             logger.error(f"Error updating plan for user {telegram_id}: {e}")
             return False
 
+    def update_language(self, telegram_id: int, language: str) -> bool:
+        try:
+            with self.db.get_session() as session:
+                user = session.query(User).filter(User.telegram_id == telegram_id).first()
+                if not user:
+                    return False
+                user.language = language
+                session.commit()
+                return True
+        except Exception as e:
+            logger.error("Error updating language for user %d: %s", telegram_id, e)
+            return False
+
     def deactivate_user(self, telegram_id: int) -> bool:
         """
         Deactivate a user

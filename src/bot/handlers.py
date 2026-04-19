@@ -13,6 +13,7 @@ from telegram.ext import ContextTypes
 from ..core.database import Database
 from ..services import UserService, SubscriptionService, CheckService
 from ..core.models import Service, UserPlan, User, Subscription
+from .i18n import t
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +216,16 @@ class BotHandlers:
         query = update.callback_query
         await query.answer()
         data = query.data
+
+        db_user = self.user_service.get_user_by_telegram_id(query.from_user.id)
+        lang = db_user.language if db_user else "en"
+
+        if data.startswith("lang_"):
+            new_lang = data[5:]
+            if new_lang in ("en", "de", "ru", "uk", "tr"):
+                self.user_service.update_language(query.from_user.id, new_lang)
+                await query.edit_message_text(t(new_lang, "language_set"))
+            return
 
         if data == "cancel":
             await query.edit_message_text("❌ Cancelled.")
@@ -458,6 +469,29 @@ class BotHandlers:
         for sub in self.subscription_service.get_user_subscriptions(db_user.id):
             self.subscription_service.update_subscription(sub.id, interval_hours=hours)
         await update.message.reply_text(f"✅ All subscriptions will now check every {hours}h.")
+
+    async def language_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = update.effective_user
+        db_user = self.user_service.get_user_by_telegram_id(user.id)
+        lang = db_user.language if db_user else "en"
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🇬🇧 English", callback_data="lang_en"),
+                InlineKeyboardButton("🇩🇪 Deutsch", callback_data="lang_de"),
+            ],
+            [
+                InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
+                InlineKeyboardButton("🇺🇦 Українська", callback_data="lang_uk"),
+            ],
+            [
+                InlineKeyboardButton("🇹🇷 Türkçe", callback_data="lang_tr"),
+            ],
+        ])
+        await update.message.reply_text(
+            t(lang, "language_choose"),
+            reply_markup=keyboard,
+            parse_mode="Markdown",
+        )
 
     # ── Admin ─────────────────────────────────────────────────────────────
 
