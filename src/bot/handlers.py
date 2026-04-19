@@ -448,6 +448,9 @@ class BotHandlers:
         await self._run_check_and_reply(query, subscription_id)
 
     async def premium_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.message.reply_text("🚧 Premium subscriptions are temporarily unavailable. Check back soon!")
+        return
+
         user = update.effective_user
         db_user = self.user_service.get_user_by_telegram_id(user.id)
         if not db_user:
