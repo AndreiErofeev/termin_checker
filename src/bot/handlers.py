@@ -7,6 +7,7 @@ Handles all bot commands and user interactions.
 import logging
 import os
 from zoneinfo import ZoneInfo
+import sqlalchemy
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice
 from telegram.ext import ContextTypes
 
@@ -65,6 +66,18 @@ class BotHandlers:
         if cancel:
             rows.append([InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel")])
         return InlineKeyboardMarkup(rows)
+
+    def _ad_footer(self, lang: str, user) -> str | None:
+        """Return ad text for free users, None for premium. Checks DB for custom ad first."""
+        if user.plan == UserPlan.PREMIUM:
+            return None
+        with self.db.get_session() as session:
+            row = session.execute(sqlalchemy.text(
+                "SELECT value FROM bot_settings WHERE key = 'current_ad'"
+            )).fetchone()
+        if row:
+            return row[0]
+        return t(lang, "ad_premium_upsell")
 
     # ── Commands ──────────────────────────────────────────────────────────
 
@@ -355,11 +368,12 @@ class BotHandlers:
         if subscription:
             service = subscription.service
             freq = t(lang, "freq_twice_daily") if is_free else t(lang, "freq_every_nh", n=interval_hours)
-            await query.edit_message_text(
-                t(lang, "subscribed", name=service.service_name, freq=freq),
-                parse_mode="Markdown",
-            )
-            await self._run_check_and_reply(query, subscription.id, lang)
+            subscribed_text = t(lang, "subscribed", name=service.service_name, freq=freq)
+            footer = self._ad_footer(lang, db_user)
+            if footer:
+                subscribed_text += "\n\n" + footer
+            await query.edit_message_text(subscribed_text, parse_mode="Markdown")
+            await self._run_check_and_reply(query, subscription.id, lang, user=db_user)
         else:
             await query.edit_message_text(t(lang, "already_subscribed"))
 
@@ -370,7 +384,7 @@ class BotHandlers:
         else:
             await query.edit_message_text(t(lang, "unsub_fail"))
 
-    async def _run_check_and_reply(self, query, subscription_id: int, lang: str = "en"):
+    async def _run_check_and_reply(self, query, subscription_id: int, lang: str = "en", user=None):
         try:
             check = await self.check_service.run_subscription_check(subscription_id)
             if not check:
@@ -383,16 +397,24 @@ class BotHandlers:
                     message += f"📅 {apt.appointment_date} {apt_at} {apt.appointment_time}\n"
                 if check.appointment_count > 10:
                     message += t(lang, "more_apts", n=check.appointment_count - 10)
+                footer = self._ad_footer(lang, user) if user else None
+                if footer:
+                    message += "\n\n" + footer
                 await query.edit_message_text(message, parse_mode="Markdown")
             else:
-                await query.edit_message_text(t(lang, "no_apts"))
+                no_apts_text = t(lang, "no_apts")
+                footer = self._ad_footer(lang, user) if user else None
+                if footer:
+                    no_apts_text += "\n\n" + footer
+                await query.edit_message_text(no_apts_text, parse_mode="Markdown")
         except Exception as e:
             logger.error("Error in check: %s", e, exc_info=True)
             await query.edit_message_text(t(lang, "check_error", msg=str(e)))
 
     async def _handle_manual_check(self, query, subscription_id: int, lang: str = "en"):
+        db_user = self.user_service.get_user_by_telegram_id(query.from_user.id)
         await query.edit_message_text(t(lang, "checking"))
-        await self._run_check_and_reply(query, subscription_id, lang)
+        await self._run_check_and_reply(query, subscription_id, lang, user=db_user)
 
     # ── Premium ───────────────────────────────────────────────────────────
 
