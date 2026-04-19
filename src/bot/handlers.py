@@ -149,6 +149,7 @@ class BotHandlers:
                 [InlineKeyboardButton(f"{dept} ({count})", callback_data=f"dept_{dept[:55]}")]
                 for dept, count in sorted(depts.items())
             ]
+            keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
 
             await update.message.reply_text(
                 "📝 *Select a department:*",
@@ -401,9 +402,10 @@ class BotHandlers:
                 f"Service: {service.service_name}\n"
                 f"Category: {service.category}\n"
                 f"Checks: {freq}\n\n"
-                f"You'll be notified when appointments open.",
+                f"Running first check now...",
                 parse_mode="Markdown",
             )
+            await self._run_check_and_reply(query, subscription.id)
         else:
             await query.edit_message_text("❌ Already subscribed to this service.")
 
@@ -416,12 +418,8 @@ class BotHandlers:
         else:
             await query.edit_message_text("❌ Failed to cancel subscription.")
 
-    async def _handle_manual_check(self, query, subscription_id: int):
-        """Handle manual check action"""
-        await query.edit_message_text("🔍 Checking for appointments... Please wait.")
-
+    async def _run_check_and_reply(self, query, subscription_id: int):
         try:
-            # Run check
             check = await self.check_service.run_subscription_check(subscription_id)
 
             if not check:
@@ -429,27 +427,25 @@ class BotHandlers:
                 return
 
             if check.available and check.appointments:
-                # Format appointment list
-                message = (
-                    f"✅ *Found {check.appointment_count} appointment(s)!*\n\n"
-                )
-
-                for apt in check.appointments[:10]:  # Limit to 10
+                message = f"✅ *Found {check.appointment_count} appointment(s)!*\n\n"
+                for apt in check.appointments[:10]:
                     message += f"📅 {apt.appointment_date} at {apt.appointment_time}\n"
-
                 if check.appointment_count > 10:
                     message += f"\n... and {check.appointment_count - 10} more"
-
                 await query.edit_message_text(message, parse_mode='Markdown')
             else:
                 await query.edit_message_text(
-                    "❌ No appointments available at the moment.\n\n"
-                    "The bot will notify you when appointments become available."
+                    "❌ No appointments available right now.\n\n"
+                    "The bot will notify you when slots open up."
                 )
 
         except Exception as e:
-            logger.error(f"Error in manual check: {e}", exc_info=True)
+            logger.error(f"Error in check: {e}", exc_info=True)
             await query.edit_message_text(f"❌ Error: {str(e)}")
+
+    async def _handle_manual_check(self, query, subscription_id: int):
+        await query.edit_message_text("🔍 Checking for appointments... Please wait.")
+        await self._run_check_and_reply(query, subscription_id)
 
     async def premium_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
