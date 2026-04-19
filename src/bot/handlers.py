@@ -235,7 +235,7 @@ class BotHandlers:
 
         elif data == "get_premium":
             # TODO: remove when premium goes live — trigger invoice instead
-            await query.edit_message_text(t(lang, "premium_unavailable"))
+            await query.edit_message_text(t(lang, "premium_unavailable"), reply_markup=None)
 
         elif data == "bd":
             await self._show_departments(query, lang)
