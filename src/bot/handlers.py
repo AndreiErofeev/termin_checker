@@ -50,7 +50,7 @@ class BotHandlers:
             cats[s.category] = cats.get(s.category, 0) + 1
         return sorted(cats.items())
 
-    def _dept_keyboard(self, depts: list[tuple[str, int]], cancel=True) -> InlineKeyboardMarkup:
+    def _dept_keyboard(self, depts: list[tuple[str, int]], lang: str = "en", cancel=True) -> InlineKeyboardMarkup:
         """2-column dept keyboard. callback_data = d{idx}."""
         rows = []
         items = list(depts)
@@ -63,7 +63,7 @@ class BotHandlers:
                     row.append(InlineKeyboardButton(f"{label} ({count})", callback_data=f"d{i+j}"))
             rows.append(row)
         if cancel:
-            rows.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
+            rows.append([InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel")])
         return InlineKeyboardMarkup(rows)
 
     # ── Commands ──────────────────────────────────────────────────────────
@@ -76,36 +76,15 @@ class BotHandlers:
             first_name=user.first_name,
             last_name=user.last_name,
         )
+        lang = db_user.language
         await update.message.reply_text(
-            f"👋 Welcome {user.first_name}!\n\n"
-            "This bot monitors appointment availability for Düsseldorf city services.\n\n"
-            "Commands:\n"
-            "/subscribe - Subscribe to a service\n"
-            "/list - View your subscriptions\n"
-            "/unsubscribe - Cancel a subscription\n"
-            "/check - Run manual check\n"
-            "/help - Help\n\n"
-            f"Your plan: {db_user.plan.value.upper()}"
+            t(lang, "welcome", name=user.first_name, plan=db_user.plan.value.upper())
         )
 
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text(
-            "📖 *Help & Commands*\n\n"
-            "/start - Start the bot\n"
-            "/subscribe - Subscribe to appointment notifications\n"
-            "/list - View your active subscriptions\n"
-            "/unsubscribe - Cancel a subscription\n"
-            "/check - Manually check for appointments\n"
-            "/help - This message\n\n"
-            "*How it works:*\n"
-            "1. Subscribe to a service via /subscribe\n"
-            "2. Bot checks automatically and notifies you when slots open\n"
-            "3. Manage subscriptions with /list and /unsubscribe\n\n"
-            "*Plans:*\n"
-            "• FREE: Up to 3 subscriptions, checks every 12 hours\n"
-            "• PREMIUM: Unlimited subscriptions, custom schedule",
-            parse_mode="Markdown",
-        )
+        db_user = self.user_service.get_user_by_telegram_id(update.effective_user.id)
+        lang = db_user.language if db_user else "en"
+        await update.message.reply_text(t(lang, "help_text"), parse_mode="Markdown")
 
     async def list_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
@@ -113,26 +92,36 @@ class BotHandlers:
         if not db_user:
             await update.message.reply_text("❌ User not found. Please use /start first.")
             return
+        lang = db_user.language
 
         subscriptions = self.subscription_service.get_user_subscriptions(db_user.id)
         if not subscriptions:
-            await update.message.reply_text(
-                "📭 You have no active subscriptions.\n\nUse /subscribe to start monitoring a service."
-            )
+            await update.message.reply_text(t(lang, "no_subs"))
             return
 
-        message = "📋 *Your Active Subscriptions:*\n\n"
+        message = t(lang, "subs_header")
         keyboard = []
         for idx, sub in enumerate(subscriptions, 1):
             service = sub.service
-            last_check = sub.last_checked_at.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("Europe/Berlin")).strftime("%d.%m.%Y %H:%M") if sub.last_checked_at else "Never"
+            if sub.last_checked_at:
+                time_str = (
+                    sub.last_checked_at
+                    .replace(tzinfo=ZoneInfo("UTC"))
+                    .astimezone(ZoneInfo("Europe/Berlin"))
+                    .strftime("%d.%m.%Y %H:%M")
+                )
+            else:
+                time_str = t(lang, "never")
             message += (
                 f"{idx}. *{service.service_name}*\n"
                 f"   {service.department or service.category}\n"
-                f"   Every {sub.interval_hours}h · Last check: {last_check}\n\n"
+                f"   {t(lang, 'interval_label', n=sub.interval_hours)} · "
+                f"{t(lang, 'last_check_label', time=time_str)}\n\n"
             )
             label = service.service_name if len(service.service_name) <= 40 else service.service_name[:38] + "…"
-            keyboard.append([InlineKeyboardButton(f"❌ Unsubscribe: {label}", callback_data=f"unsub_{sub.id}")])
+            prefix = t(lang, "btn_unsub_prefix")
+            btn_label = prefix + label if len(prefix + label) <= 64 else prefix + label[:60] + "…"
+            keyboard.append([InlineKeyboardButton(btn_label, callback_data=f"unsub_{sub.id}")])
 
         await update.message.reply_text(
             message,
@@ -146,15 +135,16 @@ class BotHandlers:
         if not db_user:
             await update.message.reply_text("❌ User not found. Please use /start first.")
             return
+        lang = db_user.language
 
         with self.db.get_session() as session:
             depts = self._sorted_depts(session)
             if not depts:
-                await update.message.reply_text("❌ No services available at the moment.")
+                await update.message.reply_text(t(lang, "no_services"))
                 return
             await update.message.reply_text(
-                "📝 *Select a department:*",
-                reply_markup=self._dept_keyboard(depts, cancel=True),
+                t(lang, "select_dept"),
+                reply_markup=self._dept_keyboard(depts, lang=lang, cancel=True),
                 parse_mode="Markdown",
             )
 
@@ -164,10 +154,11 @@ class BotHandlers:
         if not db_user:
             await update.message.reply_text("❌ User not found. Please use /start first.")
             return
+        lang = db_user.language
 
         subscriptions = self.subscription_service.get_user_subscriptions(db_user.id)
         if not subscriptions:
-            await update.message.reply_text("📭 You have no active subscriptions.")
+            await update.message.reply_text(t(lang, "no_subs_short"))
             return
 
         keyboard = []
@@ -175,10 +166,10 @@ class BotHandlers:
             name = sub.service.service_name
             label = name if len(name) <= 40 else name[:38] + "…"
             keyboard.append([InlineKeyboardButton(label, callback_data=f"unsub_{sub.id}")])
-        keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
+        keyboard.append([InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel")])
 
         await update.message.reply_text(
-            "🗑️ *Select subscription to cancel:*",
+            t(lang, "select_unsub"),
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
         )
@@ -189,12 +180,11 @@ class BotHandlers:
         if not db_user:
             await update.message.reply_text("❌ User not found. Please use /start first.")
             return
+        lang = db_user.language
 
         subscriptions = self.subscription_service.get_user_subscriptions(db_user.id)
         if not subscriptions:
-            await update.message.reply_text(
-                "📭 You have no active subscriptions.\n\nUse /subscribe to start monitoring a service."
-            )
+            await update.message.reply_text(t(lang, "no_subs"))
             return
 
         keyboard = []
@@ -202,10 +192,10 @@ class BotHandlers:
             name = sub.service.service_name
             label = name if len(name) <= 40 else name[:38] + "…"
             keyboard.append([InlineKeyboardButton(label, callback_data=f"check_{sub.id}")])
-        keyboard.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel")])
+        keyboard.append([InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel")])
 
         await update.message.reply_text(
-            "🔍 *Select subscription to check:*",
+            t(lang, "select_check"),
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
         )
@@ -228,60 +218,60 @@ class BotHandlers:
             return
 
         if data == "cancel":
-            await query.edit_message_text("❌ Cancelled.")
+            await query.edit_message_text(t(lang, "cancelled"))
 
         elif data == "bd":
-            await self._show_departments(query)
+            await self._show_departments(query, lang)
 
         elif data.startswith("bc"):
             dept_idx = int(data[2:])
-            await self._show_categories(query, dept_idx)
+            await self._show_categories(query, dept_idx, lang)
 
         elif data.startswith("d") and "c" not in data:
-            await self._show_categories(query, int(data[1:]))
+            await self._show_categories(query, int(data[1:]), lang)
 
         elif data.startswith("d") and "c" in data:
             parts = data[1:].split("c")
-            await self._show_services(query, int(parts[0]), int(parts[1]))
+            await self._show_services(query, int(parts[0]), int(parts[1]), lang=lang)
 
         elif data.startswith("srv_"):
             await self._create_subscription(query, int(data[4:]))
 
         elif data.startswith("unsub_"):
-            await self._handle_unsubscribe(query, int(data[6:]))
+            await self._handle_unsubscribe(query, int(data[6:]), lang)
 
         elif data.startswith("check_"):
-            await self._handle_manual_check(query, int(data[6:]))
+            await self._handle_manual_check(query, int(data[6:]), lang)
 
     # ── Navigation screens ────────────────────────────────────────────────
 
-    async def _show_departments(self, query):
+    async def _show_departments(self, query, lang: str = "en"):
         with self.db.get_session() as session:
             depts = self._sorted_depts(session)
             if not depts:
-                await query.edit_message_text("❌ No services available.")
+                await query.edit_message_text(t(lang, "no_services_short"))
                 return
             await query.edit_message_text(
-                "📝 *Select a department:*",
-                reply_markup=self._dept_keyboard(depts, cancel=True),
+                t(lang, "select_dept"),
+                reply_markup=self._dept_keyboard(depts, lang=lang, cancel=True),
                 parse_mode="Markdown",
             )
 
-    async def _show_categories(self, query, dept_idx: int):
+    async def _show_categories(self, query, dept_idx: int, lang: str = "en"):
         with self.db.get_session() as session:
             depts = self._sorted_depts(session)
             if dept_idx >= len(depts):
-                await query.edit_message_text("❌ Department not found.")
+                await query.edit_message_text(t(lang, "dept_not_found"))
                 return
             dept_name, _ = depts[dept_idx]
             cats = self._sorted_cats(session, dept_name)
             if not cats:
-                await query.edit_message_text("❌ No services found in this department.")
+                await query.edit_message_text(t(lang, "no_services_dept"))
                 return
 
             # Skip category screen when there's only one category
             if len(cats) == 1:
-                await self._show_services(query, dept_idx, 0, back="bd")
+                await self._show_services(query, dept_idx, 0, back="bd", lang=lang)
                 return
 
             keyboard = []
@@ -291,24 +281,24 @@ class BotHandlers:
                     f"{label} ({count})",
                     callback_data=f"d{dept_idx}c{j}",
                 )])
-            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data="bd")])
+            keyboard.append([InlineKeyboardButton(t(lang, "btn_back"), callback_data="bd")])
 
             await query.edit_message_text(
-                f"📝 *{dept_name}*\n\nSelect a category:",
+                f"📝 *{dept_name}*\n\n{t(lang, 'select_cat')}",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
 
-    async def _show_services(self, query, dept_idx: int, cat_idx: int, back: str | None = None):
+    async def _show_services(self, query, dept_idx: int, cat_idx: int, back: str | None = None, lang: str = "en"):
         with self.db.get_session() as session:
             depts = self._sorted_depts(session)
             if dept_idx >= len(depts):
-                await query.edit_message_text("❌ Department not found.")
+                await query.edit_message_text(t(lang, "dept_not_found"))
                 return
             dept_name, _ = depts[dept_idx]
             cats = self._sorted_cats(session, dept_name)
             if cat_idx >= len(cats):
-                await query.edit_message_text("❌ Category not found.")
+                await query.edit_message_text(t(lang, "cat_not_found"))
                 return
             cat_name, _ = cats[cat_idx]
 
@@ -319,18 +309,18 @@ class BotHandlers:
             ).all()
 
             if not services:
-                await query.edit_message_text("❌ No services found.")
+                await query.edit_message_text(t(lang, "no_services_cat"))
                 return
 
             keyboard = []
             for service in services[:50]:
                 label = service.service_name if len(service.service_name) <= 60 else service.service_name[:58] + "…"
                 keyboard.append([InlineKeyboardButton(label, callback_data=f"srv_{service.id}")])
-            keyboard.append([InlineKeyboardButton("⬅️ Back", callback_data=back or f"bc{dept_idx}")])
+            keyboard.append([InlineKeyboardButton(t(lang, "btn_back"), callback_data=back or f"bc{dept_idx}")])
 
             escaped_cat = cat_name.replace("*", "\\*").replace("_", "\\_")
             await query.edit_message_text(
-                f"📝 *{escaped_cat}*\n\nSelect a service:",
+                f"📝 *{escaped_cat}*\n\n{t(lang, 'select_service')}",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
@@ -343,15 +333,13 @@ class BotHandlers:
         if not db_user:
             await query.edit_message_text("❌ User not found.")
             return
+        lang = db_user.language
 
         is_free = db_user.plan == UserPlan.FREE
         if is_free:
             existing = self.subscription_service.get_user_subscriptions(db_user.id)
             if len(existing) >= 3:
-                await query.edit_message_text(
-                    "❌ Free plan allows up to 3 subscriptions.\n\n"
-                    "Use /premium to upgrade."
-                )
+                await query.edit_message_text(t(lang, "plan_limit"))
                 return
             interval_hours = 12
         else:
@@ -366,64 +354,61 @@ class BotHandlers:
 
         if subscription:
             service = subscription.service
-            freq = "twice daily" if is_free else f"every {interval_hours}h"
+            freq = t(lang, "freq_twice_daily") if is_free else t(lang, "freq_every_nh", n=interval_hours)
             await query.edit_message_text(
-                f"✅ *Subscribed!*\n\n"
-                f"Service: {service.service_name}\n"
-                f"Checks: {freq}\n\n"
-                f"Running first check now...",
+                t(lang, "subscribed", name=service.service_name, freq=freq),
                 parse_mode="Markdown",
             )
-            await self._run_check_and_reply(query, subscription.id)
+            await self._run_check_and_reply(query, subscription.id, lang)
         else:
-            await query.edit_message_text("❌ Already subscribed to this service.")
+            await query.edit_message_text(t(lang, "already_subscribed"))
 
-    async def _handle_unsubscribe(self, query, subscription_id: int):
+    async def _handle_unsubscribe(self, query, subscription_id: int, lang: str = "en"):
         success = self.subscription_service.delete_subscription(subscription_id)
         if success:
-            await query.edit_message_text("✅ Subscription cancelled.")
+            await query.edit_message_text(t(lang, "unsub_success"))
         else:
-            await query.edit_message_text("❌ Failed to cancel subscription.")
+            await query.edit_message_text(t(lang, "unsub_fail"))
 
-    async def _run_check_and_reply(self, query, subscription_id: int):
+    async def _run_check_and_reply(self, query, subscription_id: int, lang: str = "en"):
         try:
             check = await self.check_service.run_subscription_check(subscription_id)
             if not check:
-                await query.edit_message_text("❌ Failed to run check.")
+                await query.edit_message_text(t(lang, "check_fail"))
                 return
             if check.available and check.appointments:
-                message = f"✅ *Found {check.appointment_count} appointment(s)!*\n\n"
+                message = t(lang, "found_apts_header", n=check.appointment_count)
+                apt_at = t(lang, "apt_at")
                 for apt in check.appointments[:10]:
-                    message += f"📅 {apt.appointment_date} at {apt.appointment_time}\n"
+                    message += f"📅 {apt.appointment_date} {apt_at} {apt.appointment_time}\n"
                 if check.appointment_count > 10:
-                    message += f"\n…and {check.appointment_count - 10} more"
+                    message += t(lang, "more_apts", n=check.appointment_count - 10)
                 await query.edit_message_text(message, parse_mode="Markdown")
             else:
-                await query.edit_message_text(
-                    "❌ No appointments available right now.\n\n"
-                    "The bot will notify you when slots open up."
-                )
+                await query.edit_message_text(t(lang, "no_apts"))
         except Exception as e:
             logger.error("Error in check: %s", e, exc_info=True)
-            await query.edit_message_text(f"❌ Error: {str(e)}")
+            await query.edit_message_text(t(lang, "check_error", msg=str(e)))
 
-    async def _handle_manual_check(self, query, subscription_id: int):
-        await query.edit_message_text("🔍 Checking for appointments… Please wait.")
-        await self._run_check_and_reply(query, subscription_id)
+    async def _handle_manual_check(self, query, subscription_id: int, lang: str = "en"):
+        await query.edit_message_text(t(lang, "checking"))
+        await self._run_check_and_reply(query, subscription_id, lang)
 
     # ── Premium ───────────────────────────────────────────────────────────
 
     async def premium_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text("🚧 Premium subscriptions are temporarily unavailable. Check back soon!")
+        db_user = self.user_service.get_user_by_telegram_id(update.effective_user.id)
+        lang = db_user.language if db_user else "en"
+        await update.message.reply_text(t(lang, "premium_unavailable"))
         return
 
         user = update.effective_user
         db_user = self.user_service.get_user_by_telegram_id(user.id)
         if not db_user:
-            await update.message.reply_text("❌ Please use /start first.")
+            await update.message.reply_text(t(lang, "use_start"))
             return
         if db_user.plan != UserPlan.FREE:
-            await update.message.reply_text("✅ You already have Premium!")
+            await update.message.reply_text(t(lang, "already_premium"))
             return
         await context.bot.send_invoice(
             chat_id=user.id,
@@ -443,12 +428,9 @@ class BotHandlers:
         if not db_user:
             await update.message.reply_text("❌ Could not activate Premium — user not found.")
             return
+        lang = db_user.language
         self.user_service.update_plan(db_user.id, UserPlan.PREMIUM)
-        await update.message.reply_text(
-            "🎉 *Premium activated!*\n\nYou now have unlimited subscriptions.\n"
-            "Use /setschedule <hours> to customize check frequency.",
-            parse_mode="Markdown",
-        )
+        await update.message.reply_text(t(lang, "premium_activated"), parse_mode="Markdown")
 
     async def setschedule_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
@@ -456,19 +438,20 @@ class BotHandlers:
         if not db_user:
             await update.message.reply_text("❌ Please use /start first.")
             return
+        lang = db_user.language
         if db_user.plan == UserPlan.FREE:
-            await update.message.reply_text("⚠️ Custom schedules are a Premium feature.\nUse /premium to upgrade.")
+            await update.message.reply_text(t(lang, "premium_only"))
             return
         if not context.args or not context.args[0].isdigit():
-            await update.message.reply_text("Usage: /setschedule <hours>\nExample: /setschedule 2")
+            await update.message.reply_text(t(lang, "setschedule_usage"))
             return
         hours = int(context.args[0])
         if hours < 1 or hours > 24:
-            await update.message.reply_text("❌ Hours must be between 1 and 24.")
+            await update.message.reply_text(t(lang, "hours_invalid"))
             return
         for sub in self.subscription_service.get_user_subscriptions(db_user.id):
             self.subscription_service.update_subscription(sub.id, interval_hours=hours)
-        await update.message.reply_text(f"✅ All subscriptions will now check every {hours}h.")
+        await update.message.reply_text(t(lang, "schedule_updated", n=hours))
 
     async def language_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
