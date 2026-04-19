@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 from ..core.database import Database
-from ..core.models import User, UserPlan
+from ..core.models import User, UserPlan, Subscription
 
 logger = logging.getLogger(__name__)
 
@@ -133,12 +133,17 @@ class UserService:
 
     def update_plan(self, user_id: int, plan: UserPlan) -> bool:
         try:
+            interval_hours = 1 if plan == UserPlan.PREMIUM else 12
             with self.db.get_session() as session:
                 user = session.query(User).filter_by(id=user_id).first()
                 if not user:
                     return False
                 user.plan = plan
+                session.query(Subscription).filter_by(user_id=user_id).update(
+                    {"interval_hours": interval_hours}
+                )
                 session.commit()
+                logger.info("Updated plan for user %d to %s, interval=%dh", user_id, plan.value, interval_hours)
                 return True
         except Exception as e:
             logger.error("Error updating plan for user %d: %s", user_id, e)
