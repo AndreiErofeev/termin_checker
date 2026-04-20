@@ -52,10 +52,12 @@ class SchedulerService:
 
         logger.info("Starting scheduler...")
 
-        # Add main check job - runs every hour
+        # Poll every 5 minutes; due-check logic inside decides which subs actually run.
+        # Polling hourly caused subs to be checked every ~2h because Playwright takes
+        # seconds, pushing last_checked_at past the fire time so the next fire misses them.
         self.scheduler.add_job(
             self._check_all_due_subscriptions,
-            trigger=IntervalTrigger(hours=1),
+            trigger=IntervalTrigger(minutes=5),
             id='check_subscriptions',
             name='Check due subscriptions',
             replace_existing=True,
