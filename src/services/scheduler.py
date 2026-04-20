@@ -7,6 +7,7 @@ Handles periodic appointment checks using APScheduler.
 import logging
 import asyncio
 import os
+from collections import defaultdict
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -76,52 +77,60 @@ class SchedulerService:
         logger.info("Scheduler stopped")
 
     async def _check_all_due_subscriptions(self):
-        """Check all subscriptions that are due for checking"""
+        """Check all due subscriptions, scraping each unique service only once."""
         try:
-            logger.info("Running scheduled check for due subscriptions...")
-
-            # Get subscriptions due for checking
             due_subscriptions = self.subscription_service.get_subscriptions_due_for_check()
-
             if not due_subscriptions:
                 logger.info("No subscriptions due for checking")
                 return
 
-            logger.info(f"Found {len(due_subscriptions)} subscription(s) due for checking")
+            # Group by (service_id, quantity) — same service with different qty needs separate scrapes
+            groups: dict = defaultdict(list)
+            for sub in due_subscriptions:
+                groups[(sub.service_id, sub.quantity)].append(sub)
 
-            # Run checks for each subscription
-            for subscription in due_subscriptions:
-                try:
-                    logger.info(f"Checking subscription {subscription.id}...")
+            logger.info(
+                f"Found {len(due_subscriptions)} due subscription(s) "
+                f"across {len(groups)} unique service/quantity group(s)"
+            )
 
-                    check = await self.check_service.run_subscription_check(subscription.id)
+            for (service_id, quantity), subs in groups.items():
+                checked_at = datetime.now()
+                logger.info(
+                    f"Scraping service {service_id} qty={quantity} "
+                    f"for {len(subs)} subscriber(s)..."
+                )
 
-                    if check and check.available:
-                        logger.info(
-                            f"✅ Found {check.appointment_count} appointment(s) "
-                            f"for subscription {subscription.id}"
+                result = await self.check_service.scrape_service(service_id, quantity)
+
+                if result is None:
+                    logger.error(
+                        f"Scrape failed for service {service_id} qty={quantity}, "
+                        f"skipping {len(subs)} subscription(s)"
+                    )
+                    await asyncio.sleep(2)
+                    continue
+
+                for sub in subs:
+                    try:
+                        check = self.check_service.record_check(sub.id, result, checked_at)
+                        if check and check.available and self.notification_service:
+                            if sub.notify_telegram and sub.notify_on_found:
+                                try:
+                                    await self.notification_service.send_appointment_notification(
+                                        user=sub.user,
+                                        check=check,
+                                        appointments=check.appointments,
+                                    )
+                                except Exception as notif_error:
+                                    logger.error(
+                                        f"Failed to send notification for sub {sub.id}: {notif_error}"
+                                    )
+                    except Exception as e:
+                        logger.error(
+                            f"Error processing subscription {sub.id}: {e}", exc_info=True
                         )
 
-                        # Send notification if service is available and user wants notifications
-                        if self.notification_service and subscription.notify_telegram and subscription.notify_on_found:
-                            try:
-                                await self.notification_service.send_appointment_notification(
-                                    user=subscription.user,
-                                    check=check,
-                                    appointments=check.appointments
-                                )
-                            except Exception as notif_error:
-                                logger.error(f"Failed to send notification: {notif_error}")
-                    else:
-                        logger.info(f"No appointments found for subscription {subscription.id}")
-
-                except Exception as e:
-                    logger.error(
-                        f"Error checking subscription {subscription.id}: {e}",
-                        exc_info=True
-                    )
-
-                # Small delay between checks to avoid rate limiting
                 await asyncio.sleep(2)
 
             logger.info("Scheduled check completed")

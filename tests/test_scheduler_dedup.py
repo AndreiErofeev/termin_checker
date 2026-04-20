@@ -190,3 +190,123 @@ def test_record_check_returns_none_for_inactive_subscription():
     svc_obj = CheckService(db)
     result = svc_obj.record_check(sub_id, fake_result(), datetime.now())
     assert result is None
+
+
+# ── Scheduler grouping ─────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_scheduler_scrapes_once_per_unique_service():
+    """3 subs on same service + 1 sub on different service = 2 scrapes, not 4."""
+    from unittest.mock import AsyncMock, MagicMock, patch
+    from src.services.scheduler import SchedulerService
+
+    db = make_db()
+    with db.get_session() as session:
+        svc_a = make_service(session, "Führerschein")
+        svc_b = make_service(session, "Anmeldung")
+        u1 = make_user(session, tid=101)
+        u2 = make_user(session, tid=102)
+        u3 = make_user(session, tid=103)
+        u4 = make_user(session, tid=104)
+        make_subscription(session, u1, svc_a)
+        make_subscription(session, u2, svc_a)
+        make_subscription(session, u3, svc_a)
+        make_subscription(session, u4, svc_b)
+        session.commit()
+
+    scheduler = SchedulerService(db, bot_token=None)
+
+    async def mock_scrape(service_id, quantity):
+        return fake_result(available=False)
+
+    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape) as mock_scrape_fn, \
+         patch.object(scheduler.check_service, "record_check", return_value=MagicMock(available=False)) as mock_record:
+        await scheduler._check_all_due_subscriptions()
+
+    assert mock_scrape_fn.call_count == 2
+    assert mock_record.call_count == 4
+
+
+@pytest.mark.asyncio
+async def test_scheduler_groups_same_service_different_quantity_separately():
+    """qty=1 and qty=2 for the same service are different groups → 2 scrapes."""
+    from unittest.mock import patch, MagicMock
+    from src.services.scheduler import SchedulerService
+
+    db = make_db()
+    with db.get_session() as session:
+        svc = make_service(session, "Führerschein")
+        u1 = make_user(session, tid=201)
+        u2 = make_user(session, tid=202)
+        make_subscription(session, u1, svc, quantity=1)
+        make_subscription(session, u2, svc, quantity=2)
+        session.commit()
+
+    scheduler = SchedulerService(db, bot_token=None)
+
+    async def mock_scrape(service_id, quantity):
+        return fake_result(available=False)
+
+    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape) as mock_scrape_fn, \
+         patch.object(scheduler.check_service, "record_check", return_value=MagicMock(available=False)):
+        await scheduler._check_all_due_subscriptions()
+
+    assert mock_scrape_fn.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_scheduler_sends_notification_when_slot_found():
+    """When scrape returns available=True, notification sent to each subscriber."""
+    from unittest.mock import patch, MagicMock, AsyncMock
+    from src.services.scheduler import SchedulerService
+
+    db = make_db()
+    with db.get_session() as session:
+        svc = make_service(session)
+        u1 = make_user(session, tid=301)
+        u2 = make_user(session, tid=302)
+        make_subscription(session, u1, svc)
+        make_subscription(session, u2, svc)
+        session.commit()
+
+    scheduler = SchedulerService(db, bot_token=None)
+    scheduler.notification_service = AsyncMock()
+    scheduler.notification_service.send_appointment_notification = AsyncMock(return_value=True)
+
+    mock_check = MagicMock()
+    mock_check.available = True
+    mock_check.appointments = []
+
+    async def mock_scrape(service_id, quantity):
+        return fake_result(available=True)
+
+    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape), \
+         patch.object(scheduler.check_service, "record_check", return_value=mock_check):
+        await scheduler._check_all_due_subscriptions()
+
+    assert scheduler.notification_service.send_appointment_notification.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_scheduler_skips_group_when_scrape_fails():
+    """If scrape_service returns None, record_check is not called for that group."""
+    from unittest.mock import patch
+    from src.services.scheduler import SchedulerService
+
+    db = make_db()
+    with db.get_session() as session:
+        svc = make_service(session)
+        u = make_user(session, tid=401)
+        make_subscription(session, u, svc)
+        session.commit()
+
+    scheduler = SchedulerService(db, bot_token=None)
+
+    async def mock_scrape_fail(service_id, quantity):
+        return None
+
+    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape_fail), \
+         patch.object(scheduler.check_service, "record_check") as mock_record:
+        await scheduler._check_all_due_subscriptions()
+
+    mock_record.assert_not_called()
