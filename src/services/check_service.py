@@ -125,9 +125,7 @@ class CheckService:
     async def run_subscription_check(self, subscription_id: int) -> Optional[Check]:
         """Run a check for a single subscription. Used for manual checks from the bot."""
         with self.db.get_session() as session:
-            subscription = session.query(Subscription).options(
-                joinedload(Subscription.service),
-            ).filter(
+            subscription = session.query(Subscription).filter(
                 Subscription.id == subscription_id,
                 Subscription.active == True,
             ).first()
