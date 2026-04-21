@@ -57,6 +57,8 @@ STRINGS = {
         "plan_limit": "❌ Free plan allows up to 3 subscriptions.\n\nUse /premium to upgrade.",
         "subscribed": "✅ *Subscribed!*\n\nService: {name}\nChecks: {freq}\n\nRunning first check now...",
         "freq_twice_daily": "twice daily",
+        "freq_four_daily": "4× daily (in peak windows)",
+        "freq_every_15min": "Every 15 min",
         "freq_every_nh": "every {n}h",
         "already_subscribed": "❌ Already subscribed to this service.",
         "unsub_success": "✅ Subscription cancelled.",
@@ -86,9 +88,10 @@ STRINGS = {
         "language_choose": "🌐 *Choose your language:*",
         "language_set": "✅ Language updated.",
         "ad_premium_upsell": (
-            "⭐ *Free plan:* checks every 12h. Premium checks every 1h — catch slots 12× faster. /premium"
+            "⭐ Free: 4 checks/day. Premium: every 15 min — always first, never miss a slot. /premium"
         ),
         "btn_get_premium": "⭐ Get Premium (coming soon)",
+        "terms_intro": "📋 *Terms of Use*",
     },
     "de": {
         "welcome": (
@@ -146,6 +149,8 @@ STRINGS = {
         "plan_limit": "❌ Kostenloses Konto: max. 3 Abonnements.\n\nMit /premium upgraden.",
         "subscribed": "✅ *Abonniert!*\n\nDienst: {name}\nPrüfungen: {freq}\n\nErste Prüfung läuft...",
         "freq_twice_daily": "zweimal täglich",
+        "freq_four_daily": "4× täglich (in Spitzenzeiten)",
+        "freq_every_15min": "Alle 15 Min.",
         "freq_every_nh": "alle {n}h",
         "already_subscribed": "❌ Bereits abonniert.",
         "unsub_success": "✅ Abonnement gekündigt.",
@@ -175,9 +180,10 @@ STRINGS = {
         "language_choose": "🌐 *Sprache wählen:*",
         "language_set": "✅ Sprache gespeichert.",
         "ad_premium_upsell": (
-            "⭐ *Kostenlos:* Prüfung alle 12h. Premium prüft stündlich — 12× schneller. /premium"
+            "⭐ Free: 4 Checks/Tag. Premium: alle 15 Min. — immer zuerst, kein Slot verpasst. /premium"
         ),
         "btn_get_premium": "⭐ Premium holen (demnächst)",
+        "terms_intro": "📋 *Nutzungsbedingungen*",
     },
     "ru": {
         "welcome": (
@@ -235,6 +241,8 @@ STRINGS = {
         "plan_limit": "❌ Бесплатный тариф: максимум 3 подписки.\n\nИспользуйте /premium для обновления.",
         "subscribed": "✅ *Подписка оформлена!*\n\nУслуга: {name}\nПроверки: {freq}\n\nЗапускаю первую проверку...",
         "freq_twice_daily": "дважды в день",
+        "freq_four_daily": "4 раза в день (в часы пик)",
+        "freq_every_15min": "Каждые 15 мин",
         "freq_every_nh": "каждые {n}ч",
         "already_subscribed": "❌ Уже подписаны на эту услугу.",
         "unsub_success": "✅ Подписка отменена.",
@@ -264,7 +272,7 @@ STRINGS = {
         "language_choose": "🌐 *Выберите язык:*",
         "language_set": "✅ Язык сохранён.",
         "ad_premium_upsell": (
-            "⭐ *Бесплатно:* проверка каждые 12ч. Premium — каждый час, в 12 раз чаще. /premium"
+            "⭐ Бесплатно: 4 проверки/день. Премиум: каждые 15 мин — всегда первым, ни один слот не пропущен. /premium"
         ),
         "btn_get_premium": "⭐ Получить Premium (скоро)",
     },
@@ -324,6 +332,8 @@ STRINGS = {
         "plan_limit": "❌ Безкоштовний тариф: максимум 3 підписки.\n\nВикористайте /premium для оновлення.",
         "subscribed": "✅ *Підписку оформлено!*\n\nПослуга: {name}\nПеревірки: {freq}\n\nЗапускаю першу перевірку...",
         "freq_twice_daily": "двічі на день",
+        "freq_four_daily": "4 рази на день (у пікові години)",
+        "freq_every_15min": "Кожні 15 хв",
         "freq_every_nh": "кожні {n}г",
         "already_subscribed": "❌ Вже підписані на цю послугу.",
         "unsub_success": "✅ Підписку скасовано.",
@@ -353,7 +363,7 @@ STRINGS = {
         "language_choose": "🌐 *Оберіть мову:*",
         "language_set": "✅ Мову збережено.",
         "ad_premium_upsell": (
-            "⭐ *Безкоштовно:* перевірка кожні 12год. Premium — щогодини, у 12 разів частіше. /premium"
+            "⭐ Безкоштовно: 4 перевірки/день. Преміум: кожні 15 хв — завжди першим, жоден слот не пропущений. /premium"
         ),
         "btn_get_premium": "⭐ Отримати Premium (незабаром)",
     },
@@ -413,6 +423,8 @@ STRINGS = {
         "plan_limit": "❌ Ücretsiz plan: maksimum 3 abonelik.\n\nYükseltmek için /premium kullanın.",
         "subscribed": "✅ *Abone olundu!*\n\nHizmet: {name}\nKontroller: {freq}\n\nİlk kontrol başlatılıyor...",
         "freq_twice_daily": "günde iki kez",
+        "freq_four_daily": "Günde 4× (yoğun saatlerde)",
+        "freq_every_15min": "Her 15 dakika",
         "freq_every_nh": "her {n} saatte bir",
         "already_subscribed": "❌ Bu hizmete zaten abonesiniz.",
         "unsub_success": "✅ Abonelik iptal edildi.",
@@ -442,7 +454,7 @@ STRINGS = {
         "language_choose": "🌐 *Dil seçin:*",
         "language_set": "✅ Dil kaydedildi.",
         "ad_premium_upsell": (
-            "⭐ *Ücretsiz:* 12 saatte bir kontrol. Premium saatte bir kontrol — 12× daha hızlı. /premium"
+            "⭐ Ücretsiz: günde 4 kontrol. Premium: her 15 dk — her zaman önce, hiçbir slotu kaçırma. /premium"
         ),
         "btn_get_premium": "⭐ Premium Al (yakında)",
     },

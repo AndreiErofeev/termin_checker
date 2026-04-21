@@ -55,6 +55,7 @@ def main():
 
     app.add_handler(CommandHandler("start", handlers.start_command))
     app.add_handler(CommandHandler("help", handlers.help_command))
+    app.add_handler(CommandHandler("terms", handlers.terms_command))
     app.add_handler(CommandHandler("subscribe", handlers.subscribe_command))
     app.add_handler(CommandHandler("list", handlers.list_command))
     app.add_handler(CommandHandler("unsubscribe", handlers.unsubscribe_command))

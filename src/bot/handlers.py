@@ -15,6 +15,7 @@ from ..core.database import Database
 from ..services import UserService, SubscriptionService, CheckService
 from ..core.models import Service, UserPlan, User, Subscription
 from .i18n import t
+from .terms import TERMS
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +100,12 @@ class BotHandlers:
         lang = db_user.language if db_user else "en"
         await update.message.reply_text(t(lang, "help_text"), parse_mode="Markdown")
 
+    async def terms_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        db_user = self.user_service.get_user_by_telegram_id(update.effective_user.id)
+        lang = db_user.language if db_user else "en"
+        terms_lang = "de" if lang == "de" else "en"
+        await update.message.reply_text(TERMS[terms_lang], parse_mode="Markdown")
+
     async def list_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         db_user = self.user_service.get_user_by_telegram_id(user.id)
@@ -125,10 +132,14 @@ class BotHandlers:
                 )
             else:
                 time_str = t(lang, "never")
+            if db_user.plan == UserPlan.PREMIUM:
+                freq_str = t(lang, "freq_every_15min")
+            else:
+                freq_str = t(lang, "freq_four_daily")
             message += (
                 f"{idx}. *{service.service_name}*\n"
                 f"   {service.department or service.category}\n"
-                f"   {t(lang, 'interval_label', n=sub.interval_hours)} · "
+                f"   {freq_str} · "
                 f"{t(lang, 'last_check_label', time=time_str)}\n\n"
             )
             label = service.service_name if len(service.service_name) <= 40 else service.service_name[:38] + "…"
@@ -362,7 +373,7 @@ class BotHandlers:
                     reply_markup=InlineKeyboardMarkup([[btn]]),
                 )
                 return
-            interval_hours = 12
+            interval_hours = 6
         else:
             interval_hours = 1
 
@@ -375,7 +386,7 @@ class BotHandlers:
 
         if subscription:
             service = subscription.service
-            freq = t(lang, "freq_twice_daily") if is_free else t(lang, "freq_every_nh", n=interval_hours)
+            freq = t(lang, "freq_four_daily") if is_free else t(lang, "freq_every_15min")
             subscribed_text = t(lang, "subscribed", name=service.service_name, freq=freq)
             footer = self._ad_footer(lang, db_user)
             if footer:
