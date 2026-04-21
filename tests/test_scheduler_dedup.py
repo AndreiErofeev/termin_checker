@@ -27,7 +27,7 @@ def make_service(session, name="Führerschein"):
 
 
 def make_user(session, tid=1):
-    u = User(telegram_id=tid, plan=UserPlan.FREE)
+    u = User(telegram_id=tid, plan=UserPlan.PREMIUM)
     session.add(u)
     session.flush()
     return u
@@ -216,10 +216,15 @@ async def test_scheduler_scrapes_once_per_unique_service():
 
     scheduler = SchedulerService(db, bot_token=None)
 
+    # Fetch all subs to return as "due" — bypasses window logic so test is time-independent
+    with db.get_session() as session:
+        all_subs = scheduler.subscription_service.get_all_active_subscriptions()
+
     async def mock_scrape(service_id, quantity):
         return fake_result(available=False)
 
-    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape) as mock_scrape_fn, \
+    with patch.object(scheduler.subscription_service, "get_subscriptions_due_for_check", return_value=all_subs), \
+         patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape) as mock_scrape_fn, \
          patch.object(scheduler.check_service, "record_check", return_value=MagicMock(available=False)) as mock_record:
         await scheduler._check_all_due_subscriptions()
 
@@ -244,10 +249,14 @@ async def test_scheduler_groups_same_service_different_quantity_separately():
 
     scheduler = SchedulerService(db, bot_token=None)
 
+    with db.get_session() as session:
+        all_subs = scheduler.subscription_service.get_all_active_subscriptions()
+
     async def mock_scrape(service_id, quantity):
         return fake_result(available=False)
 
-    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape) as mock_scrape_fn, \
+    with patch.object(scheduler.subscription_service, "get_subscriptions_due_for_check", return_value=all_subs), \
+         patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape) as mock_scrape_fn, \
          patch.object(scheduler.check_service, "record_check", return_value=MagicMock(available=False)):
         await scheduler._check_all_due_subscriptions()
 
@@ -277,10 +286,14 @@ async def test_scheduler_sends_notification_when_slot_found():
     mock_check.available = True
     mock_check.appointments = []
 
+    with db.get_session() as session:
+        all_subs = scheduler.subscription_service.get_all_active_subscriptions()
+
     async def mock_scrape(service_id, quantity):
         return fake_result(available=True)
 
-    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape), \
+    with patch.object(scheduler.subscription_service, "get_subscriptions_due_for_check", return_value=all_subs), \
+         patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape), \
          patch.object(scheduler.check_service, "record_check", return_value=mock_check):
         await scheduler._check_all_due_subscriptions()
 
@@ -302,10 +315,14 @@ async def test_scheduler_skips_group_when_scrape_fails():
 
     scheduler = SchedulerService(db, bot_token=None)
 
+    with db.get_session() as session:
+        all_subs = scheduler.subscription_service.get_all_active_subscriptions()
+
     async def mock_scrape_fail(service_id, quantity):
         return None
 
-    with patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape_fail), \
+    with patch.object(scheduler.subscription_service, "get_subscriptions_due_for_check", return_value=all_subs), \
+         patch.object(scheduler.check_service, "scrape_service", side_effect=mock_scrape_fail), \
          patch.object(scheduler.check_service, "record_check") as mock_record:
         await scheduler._check_all_due_subscriptions()
 

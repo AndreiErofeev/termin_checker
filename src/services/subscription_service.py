@@ -6,14 +6,36 @@ Handles subscription management operations.
 
 import logging
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import joinedload
 
 from ..core.database import Database
-from ..core.models import Subscription, Service, User
+from ..core.models import Subscription, Service, User, UserPlan
 
 logger = logging.getLogger(__name__)
+
+BERLIN = ZoneInfo("Europe/Berlin")
+_UTC = ZoneInfo("UTC")
+
+# (start_hour, start_min, end_hour, end_min) in Berlin time
+FREE_WINDOWS = [
+    (7, 30, 8, 0),
+    (9, 30, 10, 0),
+    (12, 30, 13, 0),
+    (15, 30, 16, 0),
+]
+
+
+def _current_free_window_start(now_berlin: datetime) -> datetime | None:
+    """Return the start datetime of the current free window in Berlin time, or None if not in a window."""
+    for (sh, sm, eh, em) in FREE_WINDOWS:
+        window_start = now_berlin.replace(hour=sh, minute=sm, second=0, microsecond=0)
+        window_end = now_berlin.replace(hour=eh, minute=em, second=0, microsecond=0)
+        if window_start <= now_berlin < window_end:
+            return window_start
+    return None
 
 
 class SubscriptionService:
@@ -234,16 +256,27 @@ class SubscriptionService:
 
     def get_subscriptions_due_for_check(self) -> List[Subscription]:
         """
-        Get subscriptions that are due for checking based on interval
+        Get subscriptions due for checking.
+
+        Premium: due every 15 minutes.
+        Free: due only inside the 4 daily Berlin-time windows, once per window.
+
+        Premium subscriptions are returned first.
 
         Returns:
-            List of Subscription objects due for checking
+            List of Subscription objects due for checking (premium first)
         """
-        from datetime import timedelta
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)  # always UTC regardless of host timezone
+        now_berlin = datetime.now(BERLIN)
+
+        # Compute free-window start as naive UTC for comparison with last_checked_at
+        window_start_berlin = _current_free_window_start(now_berlin)
+        if window_start_berlin is not None:
+            window_start_utc = window_start_berlin.astimezone(_UTC).replace(tzinfo=None)
+        else:
+            window_start_utc = None
 
         with self.db.get_session() as session:
-            now = datetime.now()
-
             subscriptions = session.query(Subscription).options(
                 joinedload(Subscription.service),
                 joinedload(Subscription.user)
@@ -251,16 +284,21 @@ class SubscriptionService:
                 Subscription.active == True
             ).all()
 
-            due_subscriptions = []
+            premium_due = []
+            free_due = []
 
             for sub in subscriptions:
-                if sub.last_checked_at is None:
-                    # Never checked, due immediately
-                    due_subscriptions.append(sub)
+                if sub.user.plan == UserPlan.PREMIUM or sub.user.plan == UserPlan.ADMIN:
+                    # Premium: due if never checked or 15+ minutes since last check
+                    if sub.last_checked_at is None:
+                        premium_due.append(sub)
+                    elif now_utc - sub.last_checked_at >= timedelta(minutes=15):
+                        premium_due.append(sub)
                 else:
-                    # Check if enough time has passed
-                    time_since_check = now - sub.last_checked_at
-                    if time_since_check >= timedelta(hours=sub.interval_hours):
-                        due_subscriptions.append(sub)
+                    # Free: due only when inside a window and not yet checked this window
+                    if window_start_utc is None:
+                        continue
+                    if sub.last_checked_at is None or sub.last_checked_at < window_start_utc:
+                        free_due.append(sub)
 
-            return due_subscriptions
+            return premium_due + free_due
