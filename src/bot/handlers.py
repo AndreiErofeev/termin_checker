@@ -104,7 +104,17 @@ class BotHandlers:
         db_user = self.user_service.get_user_by_telegram_id(update.effective_user.id)
         lang = db_user.language if db_user else "en"
         terms_lang = "de" if lang == "de" else "en"
-        await update.message.reply_text(TERMS[terms_lang], parse_mode="Markdown")
+        text = TERMS[terms_lang]
+        # Telegram max is 4096 chars — split at the nearest section boundary before the limit
+        limit = 4000
+        if len(text) <= limit:
+            await update.message.reply_text(text, parse_mode="Markdown")
+        else:
+            split_at = text.rfind("\n\n*", 0, limit)
+            if split_at == -1:
+                split_at = limit
+            await update.message.reply_text(text[:split_at], parse_mode="Markdown")
+            await update.message.reply_text(text[split_at:].lstrip(), parse_mode="Markdown")
 
     async def list_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
