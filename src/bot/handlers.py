@@ -447,12 +447,14 @@ class BotHandlers:
 
     async def _run_check_and_reply(self, query, subscription_id: int, lang: str = "en", user=None):
         try:
+            sub = self.subscription_service.get_subscription(subscription_id)
+            service_name = sub.service.service_name if sub and sub.service else ""
             check = await self.check_service.run_subscription_check(subscription_id)
             if not check:
                 await query.edit_message_text(t(lang, "check_fail"))
                 return
             if check.available and check.appointments:
-                message = t(lang, "found_apts_header", n=check.appointment_count)
+                message = t(lang, "found_apts_header", n=check.appointment_count, name=service_name)
                 apt_at = t(lang, "apt_at")
                 for apt in check.appointments[:10]:
                     message += f"📅 {apt.appointment_date} {apt_at} {apt.appointment_time}\n"
@@ -463,7 +465,7 @@ class BotHandlers:
                     message += "\n\n" + footer
                 await query.edit_message_text(message, parse_mode="Markdown")
             else:
-                no_apts_text = t(lang, "no_apts")
+                no_apts_text = t(lang, "no_apts", name=service_name)
                 footer = self._ad_footer(lang, user) if user else None
                 if footer:
                     no_apts_text += "\n\n" + footer

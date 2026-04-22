@@ -64,11 +64,11 @@ STRINGS = {
         "unsub_success": "✅ Subscription cancelled.",
         "unsub_fail": "❌ Failed to cancel subscription.",
         "check_fail": "❌ Failed to run check.",
-        "found_apts_header": "✅ *Found {n} appointment(s)!*\n\n",
+        "found_apts_header": "✅ *Found {n} appointment(s) for {name}!*\n\n",
         "apt_at": "at",
         "more_apts": "\n…and {n} more",
         "no_apts": (
-            "❌ No appointments available right now.\n\n"
+            "❌ No appointments for *{name}* right now.\n\n"
             "The bot will notify you when slots open up."
         ),
         "check_error": "❌ Error: {msg}",
@@ -160,11 +160,11 @@ STRINGS = {
         "unsub_success": "✅ Abonnement gekündigt.",
         "unsub_fail": "❌ Kündigung fehlgeschlagen.",
         "check_fail": "❌ Prüfung fehlgeschlagen.",
-        "found_apts_header": "✅ *{n} Termin(e) gefunden!*\n\n",
+        "found_apts_header": "✅ *{n} Termin(e) für {name} gefunden!*\n\n",
         "apt_at": "um",
         "more_apts": "\n…und {n} weitere",
         "no_apts": (
-            "❌ Derzeit keine Termine verfügbar.\n\n"
+            "❌ Derzeit keine Termine für *{name}*.\n\n"
             "Sie werden benachrichtigt, wenn Termine frei werden."
         ),
         "check_error": "❌ Fehler: {msg}",
@@ -256,11 +256,11 @@ STRINGS = {
         "unsub_success": "✅ Подписка отменена.",
         "unsub_fail": "❌ Не удалось отменить подписку.",
         "check_fail": "❌ Не удалось выполнить проверку.",
-        "found_apts_header": "✅ *Найдено {n} запис(ей)!*\n\n",
+        "found_apts_header": "✅ *Найдено {n} запис(ей) для {name}!*\n\n",
         "apt_at": "в",
         "more_apts": "\n…и ещё {n}",
         "no_apts": (
-            "❌ Записи сейчас недоступны.\n\n"
+            "❌ Записи для *{name}* сейчас недоступны.\n\n"
             "Бот уведомит вас, когда появятся слоты."
         ),
         "check_error": "❌ Ошибка: {msg}",
@@ -351,11 +351,11 @@ STRINGS = {
         "unsub_success": "✅ Підписку скасовано.",
         "unsub_fail": "❌ Не вдалося скасувати підписку.",
         "check_fail": "❌ Не вдалося виконати перевірку.",
-        "found_apts_header": "✅ *Знайдено {n} запис(ів)!*\n\n",
+        "found_apts_header": "✅ *Знайдено {n} запис(ів) для {name}!*\n\n",
         "apt_at": "о",
         "more_apts": "\n…і ще {n}",
         "no_apts": (
-            "❌ Записи зараз недоступні.\n\n"
+            "❌ Записи для *{name}* зараз недоступні.\n\n"
             "Бот повідомить вас, коли з'являться слоти."
         ),
         "check_error": "❌ Помилка: {msg}",
@@ -446,11 +446,11 @@ STRINGS = {
         "unsub_success": "✅ Abonelik iptal edildi.",
         "unsub_fail": "❌ Abonelik iptal edilemedi.",
         "check_fail": "❌ Kontrol başarısız.",
-        "found_apts_header": "✅ *{n} randevu bulundu!*\n\n",
+        "found_apts_header": "✅ *{name} için {n} randevu bulundu!*\n\n",
         "apt_at": "saat",
         "more_apts": "\n…ve {n} daha",
         "no_apts": (
-            "❌ Şu anda randevu yok.\n\n"
+            "❌ *{name}* için şu anda randevu yok.\n\n"
             "Slot açıldığında bot sizi bildirecek."
         ),
         "check_error": "❌ Hata: {msg}",
