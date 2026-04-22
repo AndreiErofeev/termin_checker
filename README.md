@@ -365,6 +365,19 @@ LOG_LEVEL=DEBUG
 - [ ] Admin dashboard
 - [ ] Analytics and reporting
 
+## Terms of Use (Telegraph)
+
+`/terms` sends a link to hosted Telegraph pages — no Telegram message-length issues.
+
+| Lang | Page |
+|------|------|
+| EN | https://telegra.ph/Terms-of-Use--Düsseldorf-Termin-Checker-04-22 |
+| DE | https://telegra.ph/Nutzungsbedingungen--Düsseldorf-Termin-Checker-04-22 |
+
+**To edit:** open the auth URL in `docs/telegraph-credentials.md`, then click the pencil icon on either page.
+
+---
+
 ## Deployment (EC2)
 
 **Instance:** Amazon Linux 2023, `ec2-user`, app at `/var/app`.

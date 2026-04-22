@@ -15,7 +15,7 @@ from ..core.database import Database
 from ..services import UserService, SubscriptionService, CheckService
 from ..core.models import Service, UserPlan, User, Subscription
 from .i18n import t
-from .terms import TERMS
+from .terms import TERMS_URLS
 
 logger = logging.getLogger(__name__)
 
@@ -104,17 +104,13 @@ class BotHandlers:
         db_user = self.user_service.get_user_by_telegram_id(update.effective_user.id)
         lang = db_user.language if db_user else "en"
         terms_lang = "de" if lang == "de" else "en"
-        text = TERMS[terms_lang]
-        # Telegram max is 4096 chars — split at the nearest section boundary before the limit
-        limit = 4000
-        if len(text) <= limit:
-            await update.message.reply_text(text, parse_mode="Markdown")
-        else:
-            split_at = text.rfind("\n\n*", 0, limit)
-            if split_at == -1:
-                split_at = limit
-            await update.message.reply_text(text[:split_at], parse_mode="Markdown")
-            await update.message.reply_text(text[split_at:].lstrip(), parse_mode="Markdown")
+        url = TERMS_URLS[terms_lang]
+        label = "Nutzungsbedingungen lesen" if terms_lang == "de" else "Read Terms of Use"
+        await update.message.reply_text(
+            f"📋 [{label}]({url})",
+            parse_mode="Markdown",
+            disable_web_page_preview=False,
+        )
 
     async def list_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user

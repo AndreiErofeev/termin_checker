@@ -1,3 +1,14 @@
+"""Terms of Use — Telegraph page URLs for the Düsseldorf Termin Checker bot.
+
+Full text lives on Telegraph. Edit via the auth URL in docs/telegraph-credentials.md.
+"""
+
+TERMS_URLS = {
+    "en": "https://telegra.ph/Terms-of-Use--D%C3%BCsseldorf-Termin-Checker-04-22",
+    "de": "https://telegra.ph/Nutzungsbedingungen--D%C3%BCsseldorf-Termin-Checker-04-22",
+}
+
+# Legacy full-text kept for reference — no longer sent directly to users
 """Terms of Use text for the Düsseldorf Termin Checker bot."""
 
 TERMS = {
