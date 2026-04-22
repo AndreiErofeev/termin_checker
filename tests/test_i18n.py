@@ -39,3 +39,29 @@ def test_kwargs_interpolation():
 def test_kwargs_interpolation_russian():
     result = t("ru", "freq_every_nh", n=6)
     assert result == "каждые 6ч"
+
+
+def test_confirm_sub_prompt_all_langs():
+    for lang in ("en", "de", "ru", "uk", "tr"):
+        result = t(lang, "confirm_sub_prompt", name="Führerschein")
+        assert "Führerschein" in result
+        assert result != "confirm_sub_prompt"
+
+
+def test_confirm_unsub_prompt_all_langs():
+    for lang in ("en", "de", "ru", "uk", "tr"):
+        result = t(lang, "confirm_unsub_prompt", name="Führerschein")
+        assert "Führerschein" in result
+        assert result != "confirm_unsub_prompt"
+
+
+def test_btn_yes_subscribe_all_langs():
+    for lang in ("en", "de", "ru", "uk", "tr"):
+        result = t(lang, "btn_yes_subscribe")
+        assert result and result != "btn_yes_subscribe"
+
+
+def test_btn_yes_unsubscribe_all_langs():
+    for lang in ("en", "de", "ru", "uk", "tr"):
+        result = t(lang, "btn_yes_unsubscribe")
+        assert result and result != "btn_yes_unsubscribe"

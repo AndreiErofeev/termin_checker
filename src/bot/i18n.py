@@ -92,6 +92,10 @@ STRINGS = {
         ),
         "btn_get_premium": "⭐ Get Premium (coming soon)",
         "terms_intro": "📋 *Terms of Use*",
+        "confirm_sub_prompt": "Subscribe to *{name}*?",
+        "confirm_unsub_prompt": "Unsubscribe from *{name}*?",
+        "btn_yes_subscribe": "✅ Yes, subscribe",
+        "btn_yes_unsubscribe": "✅ Yes, unsubscribe",
     },
     "de": {
         "welcome": (
@@ -184,6 +188,10 @@ STRINGS = {
         ),
         "btn_get_premium": "⭐ Premium holen (demnächst)",
         "terms_intro": "📋 *Nutzungsbedingungen*",
+        "confirm_sub_prompt": "Abonnieren *{name}*?",
+        "confirm_unsub_prompt": "Abonnement von *{name}* kündigen?",
+        "btn_yes_subscribe": "✅ Ja, abonnieren",
+        "btn_yes_unsubscribe": "✅ Ja, kündigen",
     },
     "ru": {
         "welcome": (
@@ -275,6 +283,10 @@ STRINGS = {
             "⭐ Бесплатно: 4 проверки/день. Премиум: каждые 15 мин — всегда первым, ни один слот не пропущен. /premium"
         ),
         "btn_get_premium": "⭐ Получить Premium (скоро)",
+        "confirm_sub_prompt": "Подписаться на *{name}*?",
+        "confirm_unsub_prompt": "Отписаться от *{name}*?",
+        "btn_yes_subscribe": "✅ Да, подписаться",
+        "btn_yes_unsubscribe": "✅ Да, отписаться",
     },
     "uk": {
         "welcome": (
@@ -366,6 +378,10 @@ STRINGS = {
             "⭐ Безкоштовно: 4 перевірки/день. Преміум: кожні 15 хв — завжди першим, жоден слот не пропущений. /premium"
         ),
         "btn_get_premium": "⭐ Отримати Premium (незабаром)",
+        "confirm_sub_prompt": "Підписатися на *{name}*?",
+        "confirm_unsub_prompt": "Відписатися від *{name}*?",
+        "btn_yes_subscribe": "✅ Так, підписатися",
+        "btn_yes_unsubscribe": "✅ Так, відписатися",
     },
     "tr": {
         "welcome": (
@@ -457,6 +473,10 @@ STRINGS = {
             "⭐ Ücretsiz: günde 4 kontrol. Premium: her 15 dk — her zaman önce, hiçbir slotu kaçırma. /premium"
         ),
         "btn_get_premium": "⭐ Premium Al (yakında)",
+        "confirm_sub_prompt": "*{name}* hizmetine abone ol?",
+        "confirm_unsub_prompt": "*{name}* aboneliğini iptal et?",
+        "btn_yes_subscribe": "✅ Evet, abone ol",
+        "btn_yes_unsubscribe": "✅ Evet, iptal et",
     },
 }
 
