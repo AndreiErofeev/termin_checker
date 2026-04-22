@@ -3,13 +3,13 @@ from src.bot.i18n import t
 
 def test_ad_premium_upsell_en():
     result = t("en", "ad_premium_upsell")
-    assert "12h" in result
+    assert "15 min" in result
     assert "/premium" in result
 
 
 def test_ad_premium_upsell_ru():
     result = t("ru", "ad_premium_upsell")
-    assert "12" in result
+    assert "15" in result
 
 
 def test_ad_premium_upsell_all_langs():
@@ -57,7 +57,7 @@ def test_ad_footer_free_returns_premium_upsell():
     handlers = BotHandlers(db)
     result = handlers._ad_footer("en", _FreeUser())
     assert result is not None
-    assert "12h" in result
+    assert "15 min" in result
 
 
 def test_ad_footer_premium_returns_none():
@@ -95,6 +95,6 @@ def test_ad_footer_respects_language():
     db = _make_db()
     handlers = BotHandlers(db)
     result_ru = handlers._ad_footer("ru", _FreeUser())
-    assert "12" in result_ru
+    assert "15" in result_ru
     result_en = handlers._ad_footer("en", _FreeUser())
     assert result_en != result_ru

@@ -262,11 +262,17 @@ class BotHandlers:
             parts = data[1:].split("c")
             await self._show_services(query, int(parts[0]), int(parts[1]), lang=lang)
 
+        elif data.startswith("confirm_sub_"):
+            await self._create_subscription(query, int(data[12:]))
+
+        elif data.startswith("confirm_unsub_"):
+            await self._handle_unsubscribe(query, int(data[14:]), lang)
+
         elif data.startswith("srv_"):
-            await self._create_subscription(query, int(data[4:]))
+            await self._ask_subscribe_confirm(query, int(data[4:]), lang)
 
         elif data.startswith("unsub_"):
-            await self._handle_unsubscribe(query, int(data[6:]), lang)
+            await self._ask_unsubscribe_confirm(query, int(data[6:]), lang)
 
         elif data.startswith("check_"):
             await self._handle_manual_check(query, int(data[6:]), lang)
@@ -354,6 +360,42 @@ class BotHandlers:
             )
 
     # ── Actions ───────────────────────────────────────────────────────────
+
+    async def _ask_subscribe_confirm(self, query, service_id: int, lang: str = "en"):
+        with self.db.get_session() as session:
+            service = session.query(Service).filter_by(id=service_id).first()
+            if not service:
+                await query.edit_message_text(t(lang, "no_services_short"))
+                return
+            dept = service.department or service.category
+            name = f"{dept} › {service.service_name}"
+
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton(t(lang, "btn_yes_subscribe"), callback_data=f"confirm_sub_{service_id}"),
+            InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel"),
+        ]])
+        await query.edit_message_text(
+            t(lang, "confirm_sub_prompt", name=name),
+            reply_markup=keyboard,
+            parse_mode="Markdown",
+        )
+
+    async def _ask_unsubscribe_confirm(self, query, subscription_id: int, lang: str = "en"):
+        sub = self.subscription_service.get_subscription(subscription_id)
+        if not sub:
+            await query.edit_message_text(t(lang, "unsub_fail"))
+            return
+        name = sub.service.service_name
+
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton(t(lang, "btn_yes_unsubscribe"), callback_data=f"confirm_unsub_{subscription_id}"),
+            InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel"),
+        ]])
+        await query.edit_message_text(
+            t(lang, "confirm_unsub_prompt", name=name),
+            reply_markup=keyboard,
+            parse_mode="Markdown",
+        )
 
     async def _create_subscription(self, query, service_id: int):
         user = query.from_user
