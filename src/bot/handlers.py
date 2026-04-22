@@ -595,7 +595,7 @@ class BotHandlers:
                     return
                 lines = []
                 for u in users:
-                    sub_count = session.query(Subscription).filter_by(user_id=u.id).count()
+                    sub_count = session.query(Subscription).filter_by(user_id=u.id, active=True).count()
                     name = (u.username or u.first_name or str(u.telegram_id)).replace("_", "\\_")
                     lines.append(f"`{u.telegram_id}` @{name} — {u.plan.value} — {sub_count} subs")
                 await update.message.reply_text(
@@ -607,7 +607,7 @@ class BotHandlers:
             with self.db.get_session() as session:
                 user_count = session.query(User).count()
                 premium_count = session.query(User).filter_by(plan=UserPlan.PREMIUM).count()
-                sub_count = session.query(Subscription).count()
+                sub_count = session.query(Subscription).filter_by(active=True).count()
                 await update.message.reply_text(
                     f"*Stats:*\nUsers: {user_count} ({premium_count} premium)\nSubscriptions: {sub_count}",
                     parse_mode="Markdown",
