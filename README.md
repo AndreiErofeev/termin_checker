@@ -365,6 +365,55 @@ LOG_LEVEL=DEBUG
 - [ ] Admin dashboard
 - [ ] Analytics and reporting
 
+## Deployment (EC2)
+
+**Instance:** Amazon Linux 2023, `ec2-user`, app at `/var/app`.
+
+### First-time setup
+
+```bash
+ssh -i ~/.ssh/termin-bot.pem ec2-user@<IP>
+sudo bash /var/app/infra/ec2/install.sh   # installs deps, clones repo, starts service
+```
+
+Requires `/var/app/.env` with at minimum:
+```
+TELEGRAM_BOT_TOKEN=...
+ADMIN_TELEGRAM_ID=...
+S3_BUCKET=...           # for hourly DB backup
+```
+
+### Redeploy (update to latest `development`)
+
+```bash
+ssh -i ~/.ssh/termin-bot.pem ec2-user@<IP> \
+  'cd /var/app && git pull origin development && sudo systemctl restart termin-bot'
+```
+
+### Useful commands on the instance
+
+```bash
+systemctl status termin-bot          # check health
+journalctl -u termin-bot -f          # tail logs
+systemctl restart termin-bot         # restart after config change
+git -C /var/app log --oneline -5     # confirm deployed commit
+```
+
+### SSH access note
+
+The key is `~/.ssh/termin-bot.pem` (key pair name `termin-bot` in AWS).
+If SSH returns `Permission denied`, push a temporary key via EC2 Instance Connect first:
+
+```bash
+aws ec2-instance-connect send-ssh-public-key \
+  --instance-id <INSTANCE_ID> \
+  --instance-os-user ec2-user \
+  --ssh-public-key file://~/.ssh/termin-bot.pem.pub \
+  --availability-zone eu-west-1a
+# then SSH within 60s
+ssh -i ~/.ssh/termin-bot.pem ec2-user@<IP>
+```
+
 ## Contributing
 
 Contributions are welcome! Please:
