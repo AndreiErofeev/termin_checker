@@ -9,11 +9,14 @@ User=ec2-user
 WorkingDirectory=/var/app
 EnvironmentFile=/var/app/.env
 Environment=PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ExecStartPre=/bin/test -f /var/app/.env
 ExecStart=/usr/bin/python3.12 -m src.bot.main
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
+MemoryMax=600M
+OOMPolicy=kill
 
 [Install]
 WantedBy=multi-user.target

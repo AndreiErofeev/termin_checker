@@ -8,6 +8,7 @@ pyyaml>=6.0.1
 # Database (Phase 2)
 sqlalchemy>=2.0.0
 alembic>=1.13.0
+boto3>=1.34.0
 
 # Future dependencies (uncomment when needed)
 

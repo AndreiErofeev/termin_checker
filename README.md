@@ -373,14 +373,24 @@ LOG_LEVEL=DEBUG
 
 ```bash
 ssh -i ~/.ssh/termin-bot.pem ec2-user@<IP>
-sudo bash /var/app/infra/ec2/install.sh   # installs deps, clones repo, starts service
-```
 
-Requires `/var/app/.env` with at minimum:
-```
+# 1. Create the app directory and drop in your .env before running the installer
+sudo mkdir -p /var/app
+sudo tee /var/app/.env > /dev/null <<'EOF'
 TELEGRAM_BOT_TOKEN=...
 ADMIN_TELEGRAM_ID=...
-S3_BUCKET=...           # for hourly DB backup
+S3_BUCKET=...
+EOF
+
+# 2. Fetch and run the install script (clones repo, installs deps, starts service)
+curl -fsSL https://raw.githubusercontent.com/AndreiErofeev/termin_checker/development/infra/ec2/install.sh | sudo bash
+```
+
+Required `.env` keys:
+```
+TELEGRAM_BOT_TOKEN=...   # from @BotFather
+ADMIN_TELEGRAM_ID=...    # your Telegram numeric ID
+S3_BUCKET=...            # for hourly DB backup (optional — setup skipped if missing)
 ```
 
 ### Redeploy (update to latest `development`)
@@ -390,27 +400,40 @@ ssh -i ~/.ssh/termin-bot.pem ec2-user@<IP> \
   'cd /var/app && git pull origin development && sudo systemctl restart termin-bot'
 ```
 
+**To roll back** to a previous commit:
+```bash
+ssh -i ~/.ssh/termin-bot.pem ec2-user@<IP> \
+  'cd /var/app && git checkout <previous-sha> && sudo systemctl restart termin-bot'
+```
+
 ### Useful commands on the instance
 
 ```bash
 systemctl status termin-bot          # check health
 journalctl -u termin-bot -f          # tail logs
-systemctl restart termin-bot         # restart after config change
+sudo systemctl restart termin-bot    # restart after config change
 git -C /var/app log --oneline -5     # confirm deployed commit
 ```
 
 ### SSH access note
 
 The key is `~/.ssh/termin-bot.pem` (key pair name `termin-bot` in AWS).
-If SSH returns `Permission denied`, push a temporary key via EC2 Instance Connect first:
+If SSH returns `Permission denied`, use EC2 Instance Connect to push a temporary key:
 
 ```bash
+# Derive the public key from the PEM if you don't have a .pub file
+ssh-keygen -y -f ~/.ssh/termin-bot.pem > /tmp/termin-bot.pub
+
+AZ=$(aws ec2 describe-instances --instance-ids <INSTANCE_ID> \
+  --query 'Reservations[0].Instances[0].Placement.AvailabilityZone' --output text)
+
 aws ec2-instance-connect send-ssh-public-key \
   --instance-id <INSTANCE_ID> \
   --instance-os-user ec2-user \
-  --ssh-public-key file://~/.ssh/termin-bot.pem.pub \
-  --availability-zone eu-west-1a
-# then SSH within 60s
+  --ssh-public-key file:///tmp/termin-bot.pub \
+  --availability-zone "$AZ"
+
+# SSH within 60 seconds of the above command
 ssh -i ~/.ssh/termin-bot.pem ec2-user@<IP>
 ```
 
