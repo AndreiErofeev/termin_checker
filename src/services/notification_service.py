@@ -35,7 +35,7 @@ class NotificationService:
         self.bot = Bot(token=bot_token)
 
     async def _send(self, user: User, check: Check, message: str, reply_markup=None) -> bool:
-        """Send message and record in Notification table."""
+        """Send message and record in Notification table. Returns True iff Telegram delivery succeeded."""
         try:
             await self.bot.send_message(
                 chat_id=user.telegram_id,
@@ -43,17 +43,6 @@ class NotificationService:
                 parse_mode="Markdown",
                 reply_markup=reply_markup,
             )
-            with self.db.get_session() as session:
-                session.add(Notification(
-                    user_id=user.id,
-                    check_id=check.id,
-                    message=message,
-                    sent_at=datetime.now(),
-                    success=True,
-                ))
-                session.commit()
-            logger.info(f"Sent notification to user {user.telegram_id} for check {check.id}")
-            return True
         except TelegramError as e:
             logger.error(f"Telegram error for user {user.telegram_id}: {e}")
             try:
@@ -66,13 +55,27 @@ class NotificationService:
                         success=False,
                         error_message=str(e),
                     ))
-                    session.commit()
             except Exception:
                 pass
             return False
         except Exception as e:
             logger.error(f"Error sending notification to user {user.telegram_id}: {e}", exc_info=True)
             return False
+
+        # Telegram send succeeded — DB audit record is best-effort
+        try:
+            with self.db.get_session() as session:
+                session.add(Notification(
+                    user_id=user.id,
+                    check_id=check.id,
+                    message=message,
+                    sent_at=datetime.now(),
+                    success=True,
+                ))
+        except Exception as e:
+            logger.warning(f"Failed to record notification in DB (message was delivered): {e}")
+        logger.info(f"Sent notification to user {user.telegram_id} for check {check.id}")
+        return True
 
     async def send_appointment_notification(
         self,
