@@ -15,6 +15,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from ..core.database import Database
+from ..core.models import Subscription
 from .check_service import CheckService
 from .subscription_service import SubscriptionService
 from .notification_service import NotificationService
@@ -115,15 +116,47 @@ class SchedulerService:
 
                 for sub in subs:
                     try:
+                        # Capture pre-check state before record_check updates last_available
+                        was_available = sub.last_available
+                        last_notified = sub.last_notified_at
+
                         check = self.check_service.record_check(sub.id, result, checked_at)
-                        if check and check.available and self.notification_service:
-                            if sub.notify_telegram and sub.notify_on_found:
+                        if not check:
+                            continue
+
+                        if self.notification_service and sub.notify_telegram:
+                            now = checked_at
+                            just_appeared = check.available and not was_available
+                            reminder_due = (
+                                check.available and was_available and (
+                                    last_notified is None or
+                                    (now - last_notified) >= timedelta(hours=2)
+                                )
+                            )
+                            just_gone = not check.available and was_available
+
+                            if just_appeared or reminder_due or just_gone:
                                 try:
-                                    await self.notification_service.send_appointment_notification(
-                                        user=sub.user,
-                                        check=check,
-                                        appointments=check.appointments,
-                                    )
+                                    if just_gone:
+                                        sent = await self.notification_service.send_appointments_gone_notification(
+                                            user=sub.user,
+                                            subscription=sub,
+                                            check=check,
+                                        )
+                                    else:
+                                        sent = await self.notification_service.send_appointment_notification(
+                                            user=sub.user,
+                                            subscription=sub,
+                                            check=check,
+                                            appointments=check.appointments,
+                                            is_reminder=reminder_due,
+                                        )
+                                    if sent:
+                                        with self.db.get_session() as session:
+                                            s = session.query(Subscription).filter_by(id=sub.id).first()
+                                            if s:
+                                                s.last_notified_at = now
+                                                session.commit()
                                 except Exception as notif_error:
                                     logger.error(
                                         f"Failed to send notification for sub {sub.id}: {notif_error}"

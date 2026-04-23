@@ -100,6 +100,18 @@ class Database:
             conn.commit()
             logger.info("Migration applied: bot_settings table ensured")
 
+        for col_sql in [
+            "ALTER TABLE subscriptions ADD COLUMN last_available BOOLEAN NOT NULL DEFAULT 0",
+            "ALTER TABLE subscriptions ADD COLUMN last_notified_at DATETIME",
+        ]:
+            with self.engine.connect() as conn:
+                try:
+                    conn.execute(sqlalchemy.text(col_sql))
+                    conn.commit()
+                    logger.info(f"Migration applied: {col_sql}")
+                except Exception:
+                    pass  # Column already exists
+
     def drop_tables(self):
         """Drop all database tables (USE WITH CAUTION!)"""
         logger.warning("Dropping all database tables...")

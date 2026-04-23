@@ -12,7 +12,8 @@ from telegram import Bot
 from telegram.error import TelegramError
 
 from ..core.database import Database
-from ..core.models import Notification, Check, Appointment, User
+from ..core.models import Notification, Check, Appointment, User, Subscription
+from ..bot.i18n import t
 
 logger = logging.getLogger(__name__)
 
@@ -31,92 +32,81 @@ class NotificationService:
         self.db = db
         self.bot = Bot(token=bot_token)
 
-    async def send_appointment_notification(
-        self,
-        user: User,
-        check: Check,
-        appointments: List[Appointment]
-    ) -> bool:
-        """
-        Send appointment availability notification to user
+    def _format_apt_list(self, lang: str, appointments: List[Appointment]) -> str:
+        """Format up to 10 appointment slots as a string."""
+        lines = []
+        for apt in appointments[:10]:
+            lines.append(f"📅 {apt.appointment_date} {t(lang, 'apt_at')} {apt.appointment_time}")
+        if len(appointments) > 10:
+            lines.append(t(lang, "more_apts", n=len(appointments) - 10))
+        return "\n".join(lines)
 
-        Args:
-            user: User object
-            check: Check object
-            appointments: List of Appointment objects
-
-        Returns:
-            True if notification sent successfully, False otherwise
-        """
+    async def _send(self, user: User, check: Check, message: str) -> bool:
+        """Send message and record in Notification table."""
         try:
-            service = check.subscription.service
-
-            # Format message
-            message = (
-                f"🎉 *Appointments Available!*\n\n"
-                f"*Service:* {service.service_name}\n"
-                f"*Category:* {service.category}\n\n"
-                f"*Found {len(appointments)} appointment(s):*\n\n"
-            )
-
-            # Add appointment slots (limit to 15 to avoid message too long)
-            for idx, apt in enumerate(appointments[:15], 1):
-                message += f"{idx}. 📅 {apt.appointment_date} at {apt.appointment_time}\n"
-
-            if len(appointments) > 15:
-                message += f"\n... and {len(appointments) - 15} more appointments\n"
-
-            message += (
-                f"\n🔗 Book now: {service.base_url}\n\n"
-                f"_Checked at {check.checked_at.strftime('%Y-%m-%d %H:%M')}_"
-            )
-
-            # Send message
             await self.bot.send_message(
                 chat_id=user.telegram_id,
                 text=message,
-                parse_mode='Markdown'
+                parse_mode="Markdown",
             )
-
-            # Save notification record
             with self.db.get_session() as session:
-                notification = Notification(
+                session.add(Notification(
                     user_id=user.id,
                     check_id=check.id,
                     message=message,
                     sent_at=datetime.now(),
-                    success=True
-                )
-                session.add(notification)
+                    success=True,
+                ))
                 session.commit()
-
             logger.info(f"Sent notification to user {user.telegram_id} for check {check.id}")
             return True
-
         except TelegramError as e:
-            logger.error(f"Telegram error sending notification to user {user.telegram_id}: {e}")
-
-            # Save failed notification
+            logger.error(f"Telegram error for user {user.telegram_id}: {e}")
             try:
                 with self.db.get_session() as session:
-                    notification = Notification(
+                    session.add(Notification(
                         user_id=user.id,
                         check_id=check.id,
-                        message=message if 'message' in locals() else "Error formatting message",
+                        message=message,
                         sent_at=datetime.now(),
                         success=False,
-                        error_message=str(e)
-                    )
-                    session.add(notification)
+                        error_message=str(e),
+                    ))
                     session.commit()
-            except:
+            except Exception:
                 pass
-
             return False
-
         except Exception as e:
             logger.error(f"Error sending notification to user {user.telegram_id}: {e}", exc_info=True)
             return False
+
+    async def send_appointment_notification(
+        self,
+        user: User,
+        subscription: Subscription,
+        check: Check,
+        appointments: List[Appointment],
+        is_reminder: bool = False,
+    ) -> bool:
+        lang = user.language
+        service = subscription.service
+        header_key = "notify_reminder_header" if is_reminder else "notify_found_header"
+        message = (
+            t(lang, header_key, name=service.service_name)
+            + self._format_apt_list(lang, appointments)
+            + t(lang, "notify_book_now", url=service.base_url)
+        )
+        return await self._send(user, check, message)
+
+    async def send_appointments_gone_notification(
+        self,
+        user: User,
+        subscription: Subscription,
+        check: Check,
+    ) -> bool:
+        lang = user.language
+        message = t(lang, "notify_gone", name=subscription.service.service_name)
+        return await self._send(user, check, message)
 
     async def send_error_notification(
         self,

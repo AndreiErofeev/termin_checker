@@ -111,6 +111,7 @@ class CheckService:
                         ))
 
                 subscription.last_checked_at = checked_at
+                subscription.last_available = result.available
                 session.commit()
 
                 check = session.query(Check).options(

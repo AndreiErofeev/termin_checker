@@ -96,6 +96,10 @@ STRINGS = {
         "confirm_unsub_prompt": "Unsubscribe from *{name}*?",
         "btn_yes_subscribe": "✅ Yes, subscribe",
         "btn_yes_unsubscribe": "✅ Yes, unsubscribe",
+        "notify_found_header": "🔔 *Appointments available for {name}!*\n\n",
+        "notify_reminder_header": "⏰ *Still available — {name}:*\n\n",
+        "notify_gone": "😔 No more appointments for *{name}* right now.\n\nI'll keep checking and notify you when they're back.",
+        "notify_book_now": "\n🔗 Book now: {url}",
     },
     "de": {
         "welcome": (
@@ -192,6 +196,10 @@ STRINGS = {
         "confirm_unsub_prompt": "Abonnement von *{name}* kündigen?",
         "btn_yes_subscribe": "✅ Ja, abonnieren",
         "btn_yes_unsubscribe": "✅ Ja, kündigen",
+        "notify_found_header": "🔔 *Termine verfügbar für {name}!*\n\n",
+        "notify_reminder_header": "⏰ *Noch verfügbar — {name}:*\n\n",
+        "notify_gone": "😔 Keine Termine mehr für *{name}* verfügbar.\n\nIch prüfe weiter und benachrichtige Sie, sobald wieder Slots frei sind.",
+        "notify_book_now": "\n🔗 Jetzt buchen: {url}",
     },
     "ru": {
         "welcome": (
@@ -287,6 +295,10 @@ STRINGS = {
         "confirm_unsub_prompt": "Отписаться от *{name}*?",
         "btn_yes_subscribe": "✅ Да, подписаться",
         "btn_yes_unsubscribe": "✅ Да, отписаться",
+        "notify_found_header": "🔔 *Записи доступны для {name}!*\n\n",
+        "notify_reminder_header": "⏰ *Ещё доступно — {name}:*\n\n",
+        "notify_gone": "😔 Записи для *{name}* больше недоступны.\n\nБот продолжит проверку и уведомит вас, когда появятся слоты.",
+        "notify_book_now": "\n🔗 Записаться: {url}",
     },
     "uk": {
         "welcome": (
@@ -382,6 +394,10 @@ STRINGS = {
         "confirm_unsub_prompt": "Відписатися від *{name}*?",
         "btn_yes_subscribe": "✅ Так, підписатися",
         "btn_yes_unsubscribe": "✅ Так, відписатися",
+        "notify_found_header": "🔔 *Записи доступні для {name}!*\n\n",
+        "notify_reminder_header": "⏰ *Ще доступно — {name}:*\n\n",
+        "notify_gone": "😔 Записи для *{name}* більше недоступні.\n\nБот продовжить перевірку та повідомить, коли з'являться слоти.",
+        "notify_book_now": "\n🔗 Записатися: {url}",
     },
     "tr": {
         "welcome": (
@@ -477,6 +493,10 @@ STRINGS = {
         "confirm_unsub_prompt": "*{name}* aboneliğini iptal et?",
         "btn_yes_subscribe": "✅ Evet, abone ol",
         "btn_yes_unsubscribe": "✅ Evet, iptal et",
+        "notify_found_header": "🔔 *{name} için randevu mevcut!*\n\n",
+        "notify_reminder_header": "⏰ *Hâlâ mevcut — {name}:*\n\n",
+        "notify_gone": "😔 *{name}* için artık randevu yok.\n\nKontrol etmeye devam edeceğim, slot açıldığında bildireceğim.",
+        "notify_book_now": "\n🔗 Şimdi rezervasyon yap: {url}",
     },
 }
 
