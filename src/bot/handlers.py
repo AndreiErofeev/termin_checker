@@ -14,7 +14,7 @@ from telegram.ext import ContextTypes
 from ..core.database import Database
 from ..services import UserService, SubscriptionService, CheckService
 from ..core.models import Service, UserPlan, User, Subscription
-from .i18n import t
+from .i18n import t, format_apt_grouped
 from .terms import TERMS_URLS
 
 logger = logging.getLogger(__name__)
@@ -461,15 +461,14 @@ class BotHandlers:
                 return
             if check.available and check.appointments:
                 message = t(lang, "found_apts_header", n=check.appointment_count, name=service_name)
-                apt_at = t(lang, "apt_at")
-                for apt in check.appointments[:10]:
-                    message += f"📅 {apt.appointment_date} {apt_at} {apt.appointment_time}\n"
-                if check.appointment_count > 10:
-                    message += t(lang, "more_apts", n=check.appointment_count - 10)
+                message += format_apt_grouped(check.appointments, lang)
                 footer = self._ad_footer(lang, user) if user else None
                 if footer:
                     message += "\n\n" + footer
-                await query.edit_message_text(message, parse_mode="Markdown")
+                keyboard = InlineKeyboardMarkup([[
+                    InlineKeyboardButton(t(lang, "btn_unsubscribe"), callback_data=f"unsub_{subscription_id}"),
+                ]])
+                await query.edit_message_text(message, parse_mode="Markdown", reply_markup=keyboard)
             else:
                 no_apts_text = t(lang, "no_apts", name=service_name)
                 footer = self._ad_footer(lang, user) if user else None

@@ -100,6 +100,9 @@ STRINGS = {
         "notify_reminder_header": "⏰ *Still available — {name}:*\n\n",
         "notify_gone": "😔 No more appointments for *{name}* right now.\n\nI'll keep checking and notify you when they're back.",
         "notify_book_now": "\n🔗 Book now: {url}",
+        "apt_date_summary": "📅 {date} — {n} slots from {first_time}",
+        "more_dates": "…and {n} more date(s)",
+        "btn_unsubscribe": "❌ Unsubscribe",
     },
     "de": {
         "welcome": (
@@ -200,6 +203,9 @@ STRINGS = {
         "notify_reminder_header": "⏰ *Noch verfügbar — {name}:*\n\n",
         "notify_gone": "😔 Keine Termine mehr für *{name}* verfügbar.\n\nIch prüfe weiter und benachrichtige Sie, sobald wieder Slots frei sind.",
         "notify_book_now": "\n🔗 Jetzt buchen: {url}",
+        "apt_date_summary": "📅 {date} — {n} Termine ab {first_time}",
+        "more_dates": "…und {n} weitere Datum/Daten",
+        "btn_unsubscribe": "❌ Abonnement kündigen",
     },
     "ru": {
         "welcome": (
@@ -299,6 +305,9 @@ STRINGS = {
         "notify_reminder_header": "⏰ *Ещё доступно — {name}:*\n\n",
         "notify_gone": "😔 Записи для *{name}* больше недоступны.\n\nБот продолжит проверку и уведомит вас, когда появятся слоты.",
         "notify_book_now": "\n🔗 Записаться: {url}",
+        "apt_date_summary": "📅 {date} — {n} записей с {first_time}",
+        "more_dates": "…и ещё {n} дат",
+        "btn_unsubscribe": "❌ Отписаться",
     },
     "uk": {
         "welcome": (
@@ -398,6 +407,9 @@ STRINGS = {
         "notify_reminder_header": "⏰ *Ще доступно — {name}:*\n\n",
         "notify_gone": "😔 Записи для *{name}* більше недоступні.\n\nБот продовжить перевірку та повідомить, коли з'являться слоти.",
         "notify_book_now": "\n🔗 Записатися: {url}",
+        "apt_date_summary": "📅 {date} — {n} записів з {first_time}",
+        "more_dates": "…і ще {n} дат",
+        "btn_unsubscribe": "❌ Відписатися",
     },
     "tr": {
         "welcome": (
@@ -497,6 +509,9 @@ STRINGS = {
         "notify_reminder_header": "⏰ *Hâlâ mevcut — {name}:*\n\n",
         "notify_gone": "😔 *{name}* için artık randevu yok.\n\nKontrol etmeye devam edeceğim, slot açıldığında bildireceğim.",
         "notify_book_now": "\n🔗 Şimdi rezervasyon yap: {url}",
+        "apt_date_summary": "📅 {date} — {n} slot ({first_time}'dan itibaren)",
+        "more_dates": "…ve {n} tarih daha",
+        "btn_unsubscribe": "❌ Aboneliği iptal et",
     },
 }
 
@@ -505,3 +520,26 @@ def t(lang: str, key: str, **kwargs) -> str:
     """Return translated string, falling back to English if lang or key missing."""
     text = STRINGS.get(lang, {}).get(key) or STRINGS["en"].get(key, key)
     return text.format(**kwargs) if kwargs else text
+
+
+def format_apt_grouped(appointments, lang: str) -> str:
+    """Group appointments by date; show up to 3 dates with slot count and first time."""
+    from collections import defaultdict
+    by_date: dict[str, list[str]] = defaultdict(list)
+    for apt in appointments:
+        by_date[apt.appointment_date].append(apt.appointment_time)
+
+    lines = []
+    for date in sorted(by_date.keys())[:3]:
+        times = sorted(by_date[date])
+        n = len(times)
+        if n == 1:
+            lines.append(f"📅 {date} {t(lang, 'apt_at')} {times[0]}")
+        else:
+            lines.append(t(lang, "apt_date_summary", date=date, n=n, first_time=times[0]))
+
+    remaining = len(by_date) - min(len(by_date), 3)
+    if remaining > 0:
+        lines.append(t(lang, "more_dates", n=remaining))
+
+    return "\n".join(lines)

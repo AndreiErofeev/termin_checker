@@ -11,9 +11,11 @@ from datetime import datetime
 from telegram import Bot
 from telegram.error import TelegramError
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 from ..core.database import Database
 from ..core.models import Notification, Check, Appointment, User, Subscription
-from ..bot.i18n import t
+from ..bot.i18n import t, format_apt_grouped
 
 logger = logging.getLogger(__name__)
 
@@ -32,22 +34,14 @@ class NotificationService:
         self.db = db
         self.bot = Bot(token=bot_token)
 
-    def _format_apt_list(self, lang: str, appointments: List[Appointment]) -> str:
-        """Format up to 10 appointment slots as a string."""
-        lines = []
-        for apt in appointments[:10]:
-            lines.append(f"📅 {apt.appointment_date} {t(lang, 'apt_at')} {apt.appointment_time}")
-        if len(appointments) > 10:
-            lines.append(t(lang, "more_apts", n=len(appointments) - 10))
-        return "\n".join(lines)
-
-    async def _send(self, user: User, check: Check, message: str) -> bool:
+    async def _send(self, user: User, check: Check, message: str, reply_markup=None) -> bool:
         """Send message and record in Notification table."""
         try:
             await self.bot.send_message(
                 chat_id=user.telegram_id,
                 text=message,
                 parse_mode="Markdown",
+                reply_markup=reply_markup,
             )
             with self.db.get_session() as session:
                 session.add(Notification(
@@ -93,10 +87,13 @@ class NotificationService:
         header_key = "notify_reminder_header" if is_reminder else "notify_found_header"
         message = (
             t(lang, header_key, name=service.service_name)
-            + self._format_apt_list(lang, appointments)
+            + format_apt_grouped(appointments, lang)
             + t(lang, "notify_book_now", url=service.base_url)
         )
-        return await self._send(user, check, message)
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton(t(lang, "btn_unsubscribe"), callback_data=f"unsub_{subscription.id}"),
+        ]])
+        return await self._send(user, check, message, reply_markup=keyboard)
 
     async def send_appointments_gone_notification(
         self,
