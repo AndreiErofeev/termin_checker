@@ -530,7 +530,7 @@ def format_apt_grouped(appointments, lang: str) -> str:
         by_date[apt.appointment_date].append(apt.appointment_time)
 
     lines = []
-    for date in sorted(by_date.keys())[:3]:
+    for date in sorted(by_date.keys())[:7]:
         times = sorted(by_date[date])
         n = len(times)
         if n == 1:
@@ -538,7 +538,7 @@ def format_apt_grouped(appointments, lang: str) -> str:
         else:
             lines.append(t(lang, "apt_date_summary", date=date, n=n, first_time=times[0]))
 
-    remaining = len(by_date) - min(len(by_date), 3)
+    remaining = len(by_date) - min(len(by_date), 7)
     if remaining > 0:
         lines.append(t(lang, "more_dates", n=remaining))
 
