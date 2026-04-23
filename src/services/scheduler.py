@@ -9,13 +9,16 @@ import asyncio
 import os
 from collections import defaultdict
 from typing import Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from ..core.database import Database
-from ..core.models import Subscription
+from ..core.models import Subscription, UserPlan
+
+_BERLIN = ZoneInfo("Europe/Berlin")
 from .check_service import CheckService
 from .subscription_service import SubscriptionService
 from .notification_service import NotificationService
@@ -97,6 +100,13 @@ class SchedulerService:
                 f"across {len(groups)} unique service/quantity group(s)"
             )
 
+            # Compute daily-reminder window once per scheduler run (free users)
+            now_berlin = datetime.now(_BERLIN)
+            today_10am_naive = (
+                now_berlin.replace(hour=10, minute=0, second=0, microsecond=0)
+                .astimezone(timezone.utc).replace(tzinfo=None)
+            )
+
             for (service_id, quantity), subs in groups.items():
                 checked_at = datetime.now()
                 logger.info(
@@ -127,12 +137,22 @@ class SchedulerService:
                         if self.notification_service and sub.notify_telegram:
                             now = checked_at
                             just_appeared = check.available and not was_available
-                            reminder_due = (
-                                check.available and was_available and (
-                                    last_notified is None or
-                                    (now - last_notified) >= timedelta(hours=2)
+                            is_premium = sub.user.plan in (UserPlan.PREMIUM, UserPlan.ADMIN)
+                            if is_premium:
+                                interval_min = sub.reminder_interval_minutes or 1440
+                                reminder_due = (
+                                    check.available and was_available and (
+                                        last_notified is None or
+                                        (now - last_notified) >= timedelta(minutes=interval_min)
+                                    )
                                 )
-                            )
+                            else:
+                                # Free: daily reminder at 10am Berlin, fires once per day
+                                reminder_due = (
+                                    check.available and was_available and
+                                    now >= today_10am_naive and
+                                    (last_notified is None or last_notified < today_10am_naive)
+                                )
                             just_gone = not check.available and was_available
 
                             if just_appeared or reminder_due or just_gone:

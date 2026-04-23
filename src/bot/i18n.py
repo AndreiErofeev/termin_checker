@@ -103,6 +103,9 @@ STRINGS = {
         "apt_date_summary": "📅 {date} — {n} slots from {first_time}",
         "more_dates": "…and {n} more date(s)",
         "btn_unsubscribe": "❌ Unsubscribe",
+        "btn_change_reminder": "⚙️ Reminders",
+        "reminder_picker_prompt": "⏰ *Reminder frequency*\nHow often should I remind you while appointments are available?\n\nCurrent: every {current}",
+        "reminder_set": "✅ Got it — I'll remind you every {interval}.",
     },
     "de": {
         "welcome": (
@@ -206,6 +209,9 @@ STRINGS = {
         "apt_date_summary": "📅 {date} — {n} Termine ab {first_time}",
         "more_dates": "…und {n} weitere Datum/Daten",
         "btn_unsubscribe": "❌ Abonnement kündigen",
+        "btn_change_reminder": "⚙️ Erinnerungen",
+        "reminder_picker_prompt": "⏰ *Erinnerungsintervall*\nWie oft soll ich Sie erinnern, solange Termine verfügbar sind?\n\nAktuell: alle {current}",
+        "reminder_set": "✅ Gespeichert — ich erinnere alle {interval}.",
     },
     "ru": {
         "welcome": (
@@ -308,6 +314,9 @@ STRINGS = {
         "apt_date_summary": "📅 {date} — {n} записей с {first_time}",
         "more_dates": "…и ещё {n} дат",
         "btn_unsubscribe": "❌ Отписаться",
+        "btn_change_reminder": "⚙️ Напоминания",
+        "reminder_picker_prompt": "⏰ *Частота напоминаний*\nКак часто напоминать о доступных записях?\n\nТекущее: каждые {current}",
+        "reminder_set": "✅ Сохранено — буду напоминать каждые {interval}.",
     },
     "uk": {
         "welcome": (
@@ -410,6 +419,9 @@ STRINGS = {
         "apt_date_summary": "📅 {date} — {n} записів з {first_time}",
         "more_dates": "…і ще {n} дат",
         "btn_unsubscribe": "❌ Відписатися",
+        "btn_change_reminder": "⚙️ Нагадування",
+        "reminder_picker_prompt": "⏰ *Частота нагадувань*\nЯк часто нагадувати про доступні записи?\n\nПоточне: кожні {current}",
+        "reminder_set": "✅ Збережено — нагадуватиму кожні {interval}.",
     },
     "tr": {
         "welcome": (
@@ -512,6 +524,9 @@ STRINGS = {
         "apt_date_summary": "📅 {date} — {n} slot ({first_time}'dan itibaren)",
         "more_dates": "…ve {n} tarih daha",
         "btn_unsubscribe": "❌ Aboneliği iptal et",
+        "btn_change_reminder": "⚙️ Hatırlatmalar",
+        "reminder_picker_prompt": "⏰ *Hatırlatma sıklığı*\nRandevular açıkken ne sıklıkta hatırlatayım?\n\nŞu an: her {current}",
+        "reminder_set": "✅ Tamam — her {interval} hatırlatacağım.",
     },
 }
 

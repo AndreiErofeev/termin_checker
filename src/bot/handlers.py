@@ -19,6 +19,36 @@ from .terms import TERMS_URLS
 
 logger = logging.getLogger(__name__)
 
+# (minutes, display label) — label is universally understood without translation
+REMINDER_OPTIONS = [
+    (15, "15 min"),
+    (30, "30 min"),
+    (60, "1h"),
+    (240, "4h"),
+    (720, "12h"),
+    (1440, "1 day"),
+]
+
+
+def _interval_label(minutes: int) -> str:
+    for m, label in REMINDER_OPTIONS:
+        if m == minutes:
+            return label
+    return f"{minutes} min"
+
+
+def _reminder_keyboard(sub_id: int) -> InlineKeyboardMarkup:
+    rows = []
+    row = []
+    for minutes, label in REMINDER_OPTIONS:
+        row.append(InlineKeyboardButton(label, callback_data=f"remind_{sub_id}_{minutes}"))
+        if len(row) == 3:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return InlineKeyboardMarkup(rows)
+
 
 class BotHandlers:
     """Handler class for bot commands"""
@@ -152,6 +182,12 @@ class BotHandlers:
             prefix = t(lang, "btn_unsub_prefix")
             btn_label = prefix + label if len(prefix + label) <= 64 else prefix + label[:60] + "…"
             keyboard.append([InlineKeyboardButton(btn_label, callback_data=f"unsub_{sub.id}")])
+            if db_user.plan in (UserPlan.PREMIUM, UserPlan.ADMIN):
+                interval = _interval_label(sub.reminder_interval_minutes or 1440)
+                keyboard.append([InlineKeyboardButton(
+                    f"{t(lang, 'btn_change_reminder')}: {interval}",
+                    callback_data=f"show_remind_{sub.id}",
+                )])
 
         await update.message.reply_text(
             message,
@@ -282,6 +318,13 @@ class BotHandlers:
 
         elif data.startswith("check_"):
             await self._handle_manual_check(query, int(data[6:]), lang)
+
+        elif data.startswith("show_remind_"):
+            await self._show_reminder_picker_edit(query, int(data[12:]), lang)
+
+        elif data.startswith("remind_"):
+            _, sub_id_str, minutes_str = data.split("_")
+            await self._set_reminder_interval(query, int(sub_id_str), int(minutes_str), lang)
 
     # ── Navigation screens ────────────────────────────────────────────────
 
@@ -441,6 +484,8 @@ class BotHandlers:
                 subscribed_text += "\n\n" + footer
             await query.edit_message_text(subscribed_text, parse_mode="Markdown")
             await self._run_check_and_reply(query, subscription.id, lang, user=db_user)
+            if not is_free:
+                await self._show_reminder_picker(query, subscription.id, lang)
         else:
             await query.edit_message_text(t(lang, "already_subscribed"))
 
@@ -450,6 +495,37 @@ class BotHandlers:
             await query.edit_message_text(t(lang, "unsub_success"))
         else:
             await query.edit_message_text(t(lang, "unsub_fail"))
+
+    async def _show_reminder_picker(self, query, sub_id: int, lang: str):
+        """Send reminder picker as a new message (used after subscribe)."""
+        sub = self.subscription_service.get_subscription(sub_id)
+        current = _interval_label(sub.reminder_interval_minutes or 1440)
+        await query.message.reply_text(
+            t(lang, "reminder_picker_prompt", current=current),
+            reply_markup=_reminder_keyboard(sub_id),
+            parse_mode="Markdown",
+        )
+
+    async def _show_reminder_picker_edit(self, query, sub_id: int, lang: str):
+        """Edit current message to show reminder picker (used from /list)."""
+        sub = self.subscription_service.get_subscription(sub_id)
+        current = _interval_label(sub.reminder_interval_minutes or 1440)
+        await query.edit_message_text(
+            t(lang, "reminder_picker_prompt", current=current),
+            reply_markup=_reminder_keyboard(sub_id),
+            parse_mode="Markdown",
+        )
+
+    async def _set_reminder_interval(self, query, sub_id: int, minutes: int, lang: str):
+        with self.db.get_session() as session:
+            sub = session.query(Subscription).filter_by(id=sub_id).first()
+            if sub:
+                sub.reminder_interval_minutes = minutes
+                session.commit()
+        await query.edit_message_text(
+            t(lang, "reminder_set", interval=_interval_label(minutes)),
+            parse_mode="Markdown",
+        )
 
     async def _run_check_and_reply(self, query, subscription_id: int, lang: str = "en", user=None):
         try:
