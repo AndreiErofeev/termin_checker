@@ -605,31 +605,6 @@ class BotHandlers:
         self.user_service.update_plan(db_user.id, UserPlan.PREMIUM)
         await update.message.reply_text(t(lang, "premium_activated"), parse_mode="Markdown")
 
-    async def setschedule_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = update.effective_user
-        db_user = self.user_service.get_user_by_telegram_id(user.id)
-        if not db_user:
-            await update.message.reply_text("❌ Please use /start first.")
-            return
-        lang = db_user.language
-        if db_user.plan == UserPlan.FREE:
-            btn = InlineKeyboardButton(t(lang, "btn_get_premium"), callback_data="get_premium")
-            await update.message.reply_text(
-                t(lang, "premium_only"),
-                reply_markup=InlineKeyboardMarkup([[btn]]),
-            )
-            return
-        if not context.args or not context.args[0].isdigit():
-            await update.message.reply_text(t(lang, "setschedule_usage"))
-            return
-        hours = int(context.args[0])
-        if hours < 1 or hours > 24:
-            await update.message.reply_text(t(lang, "hours_invalid"))
-            return
-        for sub in self.subscription_service.get_user_subscriptions(db_user.id):
-            self.subscription_service.update_subscription(sub.id, interval_hours=hours)
-        await update.message.reply_text(t(lang, "schedule_updated", n=hours))
-
     async def language_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user
         db_user = self.user_service.get_user_by_telegram_id(user.id)

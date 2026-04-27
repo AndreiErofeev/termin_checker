@@ -23,7 +23,6 @@ STRINGS = {
             "/check — Manually check for appointments\n"
             "/language — Change bot language\n"
             "/premium — Upgrade to Premium\n"
-            "/setschedule — Set reminder frequency _(Premium)_\n"
             "/help — This message\n\n"
             "*How it works:*\n"
             "1. Subscribe to a service via /subscribe\n"
@@ -82,12 +81,9 @@ STRINGS = {
         "premium_no_user": "❌ Could not activate Premium — user not found.",
         "premium_activated": (
             "🎉 *Premium activated!*\n\nYou now have unlimited subscriptions.\n"
-            "Use /setschedule <hours> to customize check frequency."
+            "Checks run every 15 min. Use /list to configure reminder frequency per subscription."
         ),
         "premium_only": "⚠️ Custom schedules are a Premium feature.\nUse /premium to upgrade.",
-        "setschedule_usage": "Usage: /setschedule <hours>\nExample: /setschedule 2",
-        "hours_invalid": "❌ Hours must be between 1 and 24.",
-        "schedule_updated": "✅ All subscriptions will now check every {n}h.",
         "language_choose": "🌐 *Choose your language:*",
         "language_set": "✅ Language updated.",
         "ad_premium_upsell": (
@@ -136,7 +132,6 @@ STRINGS = {
             "/check — Manuell nach Terminen suchen\n"
             "/language — Botsprache ändern\n"
             "/premium — Auf Premium upgraden\n"
-            "/setschedule — Erinnerungsintervall festlegen _(Premium)_\n"
             "/help — Diese Nachricht\n\n"
             "*So funktioniert es:*\n"
             "1. Abonnieren Sie einen Dienst über /subscribe\n"
@@ -195,12 +190,9 @@ STRINGS = {
         "premium_no_user": "❌ Premium konnte nicht aktiviert werden — Benutzer nicht gefunden.",
         "premium_activated": (
             "🎉 *Premium aktiviert!*\n\nUnbegrenzte Abonnements.\n"
-            "Mit /setschedule <Stunden> den Zeitplan anpassen."
+            "Prüfungen alle 15 Min. Erinnerungsintervall pro Abonnement in /list konfigurierbar."
         ),
         "premium_only": "⚠️ Individuelle Zeitpläne sind ein Premium-Feature.\nMit /premium upgraden.",
-        "setschedule_usage": "Verwendung: /setschedule <Stunden>\nBeispiel: /setschedule 2",
-        "hours_invalid": "❌ Stunden müssen zwischen 1 und 24 liegen.",
-        "schedule_updated": "✅ Alle Abonnements prüfen jetzt alle {n}h.",
         "language_choose": "🌐 *Sprache wählen:*",
         "language_set": "✅ Sprache gespeichert.",
         "ad_premium_upsell": (
@@ -249,7 +241,6 @@ STRINGS = {
             "/check — Ручная проверка\n"
             "/language — Изменить язык\n"
             "/premium — Перейти на Premium\n"
-            "/setschedule — Частота напоминаний _(Premium)_\n"
             "/help — Это сообщение\n\n"
             "*Как это работает:*\n"
             "1. Подпишитесь на услугу через /subscribe\n"
@@ -308,12 +299,9 @@ STRINGS = {
         "premium_no_user": "❌ Не удалось активировать Premium — пользователь не найден.",
         "premium_activated": (
             "🎉 *Premium активирован!*\n\nБезлимитные подписки.\n"
-            "Используйте /setschedule <часы> для настройки расписания."
+            "Проверки каждые 15 мин. Частота напоминаний настраивается в /list."
         ),
         "premium_only": "⚠️ Настраиваемое расписание — функция Premium.\nИспользуйте /premium.",
-        "setschedule_usage": "Использование: /setschedule <часы>\nПример: /setschedule 2",
-        "hours_invalid": "❌ Часы должны быть от 1 до 24.",
-        "schedule_updated": "✅ Все подписки теперь проверяются каждые {n}ч.",
         "language_choose": "🌐 *Выберите язык:*",
         "language_set": "✅ Язык сохранён.",
         "ad_premium_upsell": (
@@ -361,7 +349,6 @@ STRINGS = {
             "/check — Ручна перевірка\n"
             "/language — Змінити мову\n"
             "/premium — Перейти на Premium\n"
-            "/setschedule — Частота нагадувань _(Premium)_\n"
             "/help — Це повідомлення\n\n"
             "*Як це працює:*\n"
             "1. Підпишіться на послугу через /subscribe\n"
@@ -420,12 +407,9 @@ STRINGS = {
         "premium_no_user": "❌ Не вдалося активувати Premium — користувача не знайдено.",
         "premium_activated": (
             "🎉 *Premium активовано!*\n\nНеобмежені підписки.\n"
-            "Використайте /setschedule <години> для налаштування графіку."
+            "Перевірки кожні 15 хв. Частота нагадувань налаштовується в /list."
         ),
         "premium_only": "⚠️ Налаштований графік — функція Premium.\nВикористайте /premium.",
-        "setschedule_usage": "Використання: /setschedule <години>\nПриклад: /setschedule 2",
-        "hours_invalid": "❌ Години мають бути від 1 до 24.",
-        "schedule_updated": "✅ Усі підписки тепер перевіряються кожні {n}г.",
         "language_choose": "🌐 *Оберіть мову:*",
         "language_set": "✅ Мову збережено.",
         "ad_premium_upsell": (
@@ -473,7 +457,6 @@ STRINGS = {
             "/check — Manuel kontrol\n"
             "/language — Dil değiştir\n"
             "/premium — Premium'a yükselt\n"
-            "/setschedule — Hatırlatma sıklığını ayarla _(Premium)_\n"
             "/help — Bu mesaj\n\n"
             "*Nasıl çalışır:*\n"
             "1. /subscribe ile bir hizmete abone olun\n"
@@ -532,12 +515,9 @@ STRINGS = {
         "premium_no_user": "❌ Premium etkinleştirilemedi — kullanıcı bulunamadı.",
         "premium_activated": (
             "🎉 *Premium etkinleştirildi!*\n\nSınırsız abonelik.\n"
-            "Kontrol sıklığını ayarlamak için /setschedule <saat> kullanın."
+            "Kontroller 15 dk'da bir çalışır. Hatırlatma sıklığını /list üzerinden ayarlayın."
         ),
         "premium_only": "⚠️ Özel zamanlama Premium özelliğidir.\n/premium kullanın.",
-        "setschedule_usage": "Kullanım: /setschedule <saat>\nÖrnek: /setschedule 2",
-        "hours_invalid": "❌ Saat 1 ile 24 arasında olmalıdır.",
-        "schedule_updated": "✅ Tüm abonelikler artık her {n} saatte bir kontrol edilecek.",
         "language_choose": "🌐 *Dil seçin:*",
         "language_set": "✅ Dil kaydedildi.",
         "ad_premium_upsell": (
