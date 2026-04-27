@@ -104,6 +104,8 @@ class Database:
             "ALTER TABLE subscriptions ADD COLUMN last_available BOOLEAN NOT NULL DEFAULT 0",
             "ALTER TABLE subscriptions ADD COLUMN last_notified_at DATETIME",
             "ALTER TABLE subscriptions ADD COLUMN reminder_interval_minutes INTEGER",
+            "ALTER TABLE subscriptions ADD COLUMN became_available_at DATETIME",
+            "ALTER TABLE subscriptions ADD COLUMN last_missed_notification_at DATETIME",
         ]:
             with self.engine.connect() as conn:
                 try:

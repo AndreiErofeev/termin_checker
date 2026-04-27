@@ -20,7 +20,7 @@ from ..core.models import Subscription, UserPlan
 
 _BERLIN = ZoneInfo("Europe/Berlin")
 from .check_service import CheckService
-from .subscription_service import SubscriptionService
+from .subscription_service import SubscriptionService, _current_free_window_start
 from .notification_service import NotificationService
 
 logger = logging.getLogger(__name__)
@@ -100,10 +100,15 @@ class SchedulerService:
                 f"across {len(groups)} unique service/quantity group(s)"
             )
 
-            # Compute daily-reminder window once per scheduler run (free users)
+            # Compute time references once per scheduler run
             now_berlin = datetime.now(_BERLIN)
+            in_free_window = _current_free_window_start(now_berlin) is not None
             today_10am_naive = (
                 now_berlin.replace(hour=10, minute=0, second=0, microsecond=0)
+                .astimezone(timezone.utc).replace(tzinfo=None)
+            )
+            today_midnight_naive = (
+                now_berlin.replace(hour=0, minute=0, second=0, microsecond=0)
                 .astimezone(timezone.utc).replace(tzinfo=None)
             )
 
@@ -126,50 +131,41 @@ class SchedulerService:
 
                 for sub in subs:
                     try:
-                        # Capture pre-check state before record_check updates last_available
+                        # Capture pre-check state before record_check updates these fields
                         was_available = sub.last_available
                         last_notified = sub.last_notified_at
+                        became_available_at = sub.became_available_at
 
                         check = self.check_service.record_check(sub.id, result, checked_at)
                         if not check:
                             continue
 
-                        if self.notification_service and sub.notify_telegram:
-                            now = checked_at
-                            just_appeared = check.available and not was_available
-                            is_premium = sub.user.plan in (UserPlan.PREMIUM, UserPlan.ADMIN)
-                            if is_premium:
-                                interval_min = sub.reminder_interval_minutes or 1440
-                                reminder_due = (
-                                    check.available and was_available and (
-                                        last_notified is None or
-                                        (now - last_notified) >= timedelta(minutes=interval_min)
-                                    )
-                                )
-                            else:
-                                # Free: daily reminder at 10am Berlin, fires once per day
-                                reminder_due = (
-                                    check.available and was_available and
-                                    now >= today_10am_naive and
-                                    (last_notified is None or last_notified < today_10am_naive)
-                                )
-                            just_gone = not check.available and was_available
+                        if not (self.notification_service and sub.notify_telegram):
+                            continue
 
+                        now = checked_at
+                        just_appeared = check.available and not was_available
+                        just_gone = not check.available and was_available
+                        is_premium = sub.user.plan in (UserPlan.PREMIUM, UserPlan.ADMIN)
+
+                        if is_premium:
+                            interval_min = sub.reminder_interval_minutes or 1440
+                            reminder_due = (
+                                check.available and was_available and (
+                                    last_notified is None or
+                                    (now - last_notified) >= timedelta(minutes=interval_min)
+                                )
+                            )
                             if just_appeared or reminder_due or just_gone:
                                 try:
                                     if just_gone:
                                         sent = await self.notification_service.send_appointments_gone_notification(
-                                            user=sub.user,
-                                            subscription=sub,
-                                            check=check,
+                                            user=sub.user, subscription=sub, check=check,
                                         )
                                     else:
                                         sent = await self.notification_service.send_appointment_notification(
-                                            user=sub.user,
-                                            subscription=sub,
-                                            check=check,
-                                            appointments=check.appointments,
-                                            is_reminder=reminder_due,
+                                            user=sub.user, subscription=sub, check=check,
+                                            appointments=check.appointments, is_reminder=reminder_due,
                                         )
                                     if sent:
                                         with self.db.get_session() as session:
@@ -178,9 +174,67 @@ class SchedulerService:
                                                 s.last_notified_at = now
                                                 session.commit()
                                 except Exception as notif_error:
-                                    logger.error(
-                                        f"Failed to send notification for sub {sub.id}: {notif_error}"
+                                    logger.error(f"Failed to send notification for sub {sub.id}: {notif_error}")
+                        else:
+                            # Free user: gate appeared by window; detect missed-it on just_gone
+                            notify_appeared = just_appeared and in_free_window
+                            reminder_due = (
+                                check.available and was_available and
+                                now >= today_10am_naive and
+                                (last_notified is None or last_notified < today_10am_naive)
+                            )
+                            user_was_notified = (
+                                last_notified is not None and
+                                became_available_at is not None and
+                                last_notified >= became_available_at
+                            )
+                            missed_it = (
+                                just_gone and
+                                became_available_at is not None and
+                                not user_was_notified and
+                                (sub.last_missed_notification_at is None or
+                                 sub.last_missed_notification_at < today_midnight_naive)
+                            )
+                            send_gone_normal = just_gone and (user_was_notified or became_available_at is None)
+
+                            if notify_appeared or reminder_due or send_gone_normal:
+                                try:
+                                    if send_gone_normal:
+                                        sent = await self.notification_service.send_appointments_gone_notification(
+                                            user=sub.user, subscription=sub, check=check,
+                                        )
+                                    else:
+                                        sent = await self.notification_service.send_appointment_notification(
+                                            user=sub.user, subscription=sub, check=check,
+                                            appointments=check.appointments, is_reminder=reminder_due,
+                                        )
+                                    if sent:
+                                        with self.db.get_session() as session:
+                                            s = session.query(Subscription).filter_by(id=sub.id).first()
+                                            if s:
+                                                s.last_notified_at = now
+                                                session.commit()
+                                except Exception as notif_error:
+                                    logger.error(f"Failed to send notification for sub {sub.id}: {notif_error}")
+
+                            if missed_it:
+                                try:
+                                    sent = await self.notification_service.send_missed_opportunity_notification(
+                                        user=sub.user,
+                                        subscription=sub,
+                                        check=check,
+                                        became_available_at=became_available_at,
+                                        gone_at=checked_at,
                                     )
+                                    if sent:
+                                        with self.db.get_session() as session:
+                                            s = session.query(Subscription).filter_by(id=sub.id).first()
+                                            if s:
+                                                s.last_missed_notification_at = now
+                                                session.commit()
+                                except Exception as notif_error:
+                                    logger.error(f"Failed to send missed-it notification for sub {sub.id}: {notif_error}")
+
                     except Exception as e:
                         logger.error(
                             f"Error processing subscription {sub.id}: {e}", exc_info=True

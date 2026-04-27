@@ -6,7 +6,8 @@ Handles sending notifications to users via Telegram.
 
 import logging
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 from telegram import Bot
 from telegram.error import TelegramError
@@ -106,6 +107,29 @@ class NotificationService:
     ) -> bool:
         lang = user.language
         message = t(lang, "notify_gone", name=subscription.service.service_name)
+        return await self._send(user, check, message)
+
+    _BERLIN = ZoneInfo("Europe/Berlin")
+
+    async def send_missed_opportunity_notification(
+        self,
+        user: User,
+        subscription: Subscription,
+        check: Check,
+        became_available_at: datetime,
+        gone_at: datetime,
+    ) -> bool:
+        """Send 'you missed it' upsell to a free user whose slots appeared and disappeared unnoticed."""
+        lang = user.language
+        appeared_str = became_available_at.replace(tzinfo=timezone.utc).astimezone(self._BERLIN).strftime("%H:%M")
+        gone_str = gone_at.replace(tzinfo=timezone.utc).astimezone(self._BERLIN).strftime("%H:%M")
+        message = t(
+            lang,
+            "notify_missed_opportunity",
+            name=subscription.service.service_name,
+            appeared=appeared_str,
+            gone=gone_str,
+        )
         return await self._send(user, check, message)
 
     async def send_error_notification(

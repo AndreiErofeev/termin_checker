@@ -110,8 +110,16 @@ class CheckService:
                             raw_text=apt_slot.raw_text,
                         ))
 
+                was_available = subscription.last_available
                 subscription.last_checked_at = checked_at
                 subscription.last_available = result.available
+
+                # Track when slots first appeared for missed-opportunity detection
+                if result.available and not was_available:
+                    subscription.became_available_at = checked_at
+                elif not result.available:
+                    subscription.became_available_at = None
+
                 session.commit()
 
                 check = session.query(Check).options(

@@ -256,25 +256,14 @@ class SubscriptionService:
 
     def get_subscriptions_due_for_check(self) -> List[Subscription]:
         """
-        Get subscriptions due for checking.
-
-        Premium: due every 15 minutes.
-        Free: due only inside the 4 daily Berlin-time windows, once per window.
-
+        Get subscriptions due for checking (every 15 minutes, all plans).
+        Notification gating for free users happens in the scheduler.
         Premium subscriptions are returned first.
 
         Returns:
             List of Subscription objects due for checking (premium first)
         """
-        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)  # always UTC regardless of host timezone
-        now_berlin = datetime.now(BERLIN)
-
-        # Compute free-window start as naive UTC for comparison with last_checked_at
-        window_start_berlin = _current_free_window_start(now_berlin)
-        if window_start_berlin is not None:
-            window_start_utc = window_start_berlin.astimezone(_UTC).replace(tzinfo=None)
-        else:
-            window_start_utc = None
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
 
         with self.db.get_session() as session:
             subscriptions = session.query(Subscription).options(
@@ -288,17 +277,11 @@ class SubscriptionService:
             free_due = []
 
             for sub in subscriptions:
-                if sub.user.plan == UserPlan.PREMIUM or sub.user.plan == UserPlan.ADMIN:
-                    # Premium: due if never checked or 15+ minutes since last check
-                    if sub.last_checked_at is None:
-                        premium_due.append(sub)
-                    elif now_utc - sub.last_checked_at >= timedelta(minutes=15):
-                        premium_due.append(sub)
+                if sub.last_checked_at is not None and now_utc - sub.last_checked_at < timedelta(minutes=15):
+                    continue
+                if sub.user.plan in (UserPlan.PREMIUM, UserPlan.ADMIN):
+                    premium_due.append(sub)
                 else:
-                    # Free: due only when inside a window and not yet checked this window
-                    if window_start_utc is None:
-                        continue
-                    if sub.last_checked_at is None or sub.last_checked_at < window_start_utc:
-                        free_due.append(sub)
+                    free_due.append(sub)
 
             return premium_due + free_due

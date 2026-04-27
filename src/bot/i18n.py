@@ -109,6 +109,13 @@ STRINGS = {
         "unsub_kept": "👍 Still monitoring.",
         "btn_no_subscribe": "✖️ No thanks",
         "sub_not_subscribed": "✖️ No subscription added.",
+        "notify_missed_opportunity": (
+            "⚡ *Slots appeared — and disappeared!*\n\n"
+            "Appointments for *{name}* were available at {appeared} today — "
+            "but by {gone} they were already gone.\n\n"
+            "💎 With *Premium* you're checked every 15 min — you'd never miss a slot again.\n\n"
+            "→ /premium"
+        ),
     },
     "de": {
         "welcome": (
@@ -218,6 +225,13 @@ STRINGS = {
         "unsub_kept": "👍 Weiter wird überwacht.",
         "btn_no_subscribe": "✖️ Nein danke",
         "sub_not_subscribed": "✖️ Nicht abonniert.",
+        "notify_missed_opportunity": (
+            "⚡ *Termine erschienen — und sind wieder weg!*\n\n"
+            "Für *{name}* gab es heute um {appeared} Termine — "
+            "doch um {gone} waren sie schon vergeben.\n\n"
+            "💎 Mit *Premium* wirst du alle 15 Min. geprüft — kein Slot geht mehr verloren.\n\n"
+            "→ /premium"
+        ),
     },
     "ru": {
         "welcome": (
@@ -326,6 +340,13 @@ STRINGS = {
         "unsub_kept": "👍 Мониторинг продолжается.",
         "btn_no_subscribe": "✖️ Нет, спасибо",
         "sub_not_subscribed": "✖️ Подписка не оформлена.",
+        "notify_missed_opportunity": (
+            "⚡ *Слоты появились — и исчезли!*\n\n"
+            "Для *{name}* сегодня в {appeared} были доступны записи — "
+            "но к {gone} они уже пропали.\n\n"
+            "💎 С *Premium* проверки каждые 15 мин — вы никогда не пропустите слот.\n\n"
+            "→ /premium"
+        ),
     },
     "uk": {
         "welcome": (
@@ -434,6 +455,13 @@ STRINGS = {
         "unsub_kept": "👍 Моніторинг триває.",
         "btn_no_subscribe": "✖️ Ні, дякую",
         "sub_not_subscribed": "✖️ Не підписано.",
+        "notify_missed_opportunity": (
+            "⚡ *Слоти з'явились — і зникли!*\n\n"
+            "Для *{name}* сьогодні о {appeared} були доступні записи — "
+            "але вже о {gone} їх не стало.\n\n"
+            "💎 З *Premium* перевірки кожні 15 хв — ви ніколи не пропустите слот.\n\n"
+            "→ /premium"
+        ),
     },
     "tr": {
         "welcome": (
@@ -542,6 +570,13 @@ STRINGS = {
         "unsub_kept": "👍 Takip devam ediyor.",
         "btn_no_subscribe": "✖️ Hayır, teşekkürler",
         "sub_not_subscribed": "✖️ Abone olunmadı.",
+        "notify_missed_opportunity": (
+            "⚡ *Slotlar çıktı — ve gitti!*\n\n"
+            "*{name}* için bugün {appeared}'da randevu vardı — "
+            "ama {gone}'da artık yoktu.\n\n"
+            "💎 *Premium* ile 15 dk'da bir kontrol edilir — hiçbir slotu kaçırmazsınız.\n\n"
+            "→ /premium"
+        ),
     },
 }
 
