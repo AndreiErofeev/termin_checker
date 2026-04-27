@@ -286,6 +286,12 @@ class BotHandlers:
         if data == "cancel":
             await query.edit_message_text(t(lang, "cancelled"))
 
+        elif data == "cancel_sub":
+            await query.edit_message_text(t(lang, "sub_not_subscribed"))
+
+        elif data == "keep_sub":
+            await query.edit_message_text(t(lang, "unsub_kept"))
+
         elif data == "get_premium":
             # TODO: remove when premium goes live — trigger invoice instead
             await query.edit_message_text(t(lang, "premium_unavailable"), reply_markup=None)
@@ -421,7 +427,7 @@ class BotHandlers:
 
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton(t(lang, "btn_yes_subscribe"), callback_data=f"confirm_sub_{service_id}"),
-            InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel"),
+            InlineKeyboardButton(t(lang, "btn_no_subscribe"), callback_data="cancel_sub"),
         ]])
         await query.edit_message_text(
             t(lang, "confirm_sub_prompt", name=name),
@@ -438,7 +444,7 @@ class BotHandlers:
 
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton(t(lang, "btn_yes_unsubscribe"), callback_data=f"confirm_unsub_{subscription_id}"),
-            InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel"),
+            InlineKeyboardButton(t(lang, "btn_keep_subscription"), callback_data="keep_sub"),
         ]])
         await query.edit_message_text(
             t(lang, "confirm_unsub_prompt", name=name),
