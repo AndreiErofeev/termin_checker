@@ -14,10 +14,40 @@ from telegram.ext import ContextTypes
 from ..core.database import Database
 from ..services import UserService, SubscriptionService, CheckService
 from ..core.models import Service, UserPlan, User, Subscription
-from .i18n import t
+from .i18n import t, format_apt_grouped
 from .terms import TERMS_URLS
 
 logger = logging.getLogger(__name__)
+
+# (minutes, display label) — label is universally understood without translation
+REMINDER_OPTIONS = [
+    (15, "15 min"),
+    (30, "30 min"),
+    (60, "1h"),
+    (240, "4h"),
+    (720, "12h"),
+    (1440, "1 day"),
+]
+
+
+def _interval_label(minutes: int) -> str:
+    for m, label in REMINDER_OPTIONS:
+        if m == minutes:
+            return label
+    return f"{minutes} min"
+
+
+def _reminder_keyboard(sub_id: int) -> InlineKeyboardMarkup:
+    rows = []
+    row = []
+    for minutes, label in REMINDER_OPTIONS:
+        row.append(InlineKeyboardButton(label, callback_data=f"remind_{sub_id}_{minutes}"))
+        if len(row) == 3:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return InlineKeyboardMarkup(rows)
 
 
 class BotHandlers:
@@ -152,6 +182,12 @@ class BotHandlers:
             prefix = t(lang, "btn_unsub_prefix")
             btn_label = prefix + label if len(prefix + label) <= 64 else prefix + label[:60] + "…"
             keyboard.append([InlineKeyboardButton(btn_label, callback_data=f"unsub_{sub.id}")])
+            if db_user.plan in (UserPlan.PREMIUM, UserPlan.ADMIN):
+                interval = _interval_label(sub.reminder_interval_minutes or 1440)
+                keyboard.append([InlineKeyboardButton(
+                    f"{t(lang, 'btn_change_reminder')}: {interval}",
+                    callback_data=f"show_remind_{sub.id}",
+                )])
 
         await update.message.reply_text(
             message,
@@ -250,6 +286,12 @@ class BotHandlers:
         if data == "cancel":
             await query.edit_message_text(t(lang, "cancelled"))
 
+        elif data == "cancel_sub":
+            await query.edit_message_text(t(lang, "sub_not_subscribed"))
+
+        elif data == "keep_sub":
+            await query.edit_message_text(t(lang, "unsub_kept"))
+
         elif data == "get_premium":
             # TODO: remove when premium goes live — trigger invoice instead
             await query.edit_message_text(t(lang, "premium_unavailable"), reply_markup=None)
@@ -282,6 +324,13 @@ class BotHandlers:
 
         elif data.startswith("check_"):
             await self._handle_manual_check(query, int(data[6:]), lang)
+
+        elif data.startswith("show_remind_"):
+            await self._show_reminder_picker_edit(query, int(data[12:]), lang)
+
+        elif data.startswith("remind_"):
+            _, sub_id_str, minutes_str = data.split("_")
+            await self._set_reminder_interval(query, int(sub_id_str), int(minutes_str), lang)
 
     # ── Navigation screens ────────────────────────────────────────────────
 
@@ -378,7 +427,7 @@ class BotHandlers:
 
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton(t(lang, "btn_yes_subscribe"), callback_data=f"confirm_sub_{service_id}"),
-            InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel"),
+            InlineKeyboardButton(t(lang, "btn_no_subscribe"), callback_data="cancel_sub"),
         ]])
         await query.edit_message_text(
             t(lang, "confirm_sub_prompt", name=name),
@@ -395,7 +444,7 @@ class BotHandlers:
 
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton(t(lang, "btn_yes_unsubscribe"), callback_data=f"confirm_unsub_{subscription_id}"),
-            InlineKeyboardButton(t(lang, "btn_cancel"), callback_data="cancel"),
+            InlineKeyboardButton(t(lang, "btn_keep_subscription"), callback_data="keep_sub"),
         ]])
         await query.edit_message_text(
             t(lang, "confirm_unsub_prompt", name=name),
@@ -441,6 +490,8 @@ class BotHandlers:
                 subscribed_text += "\n\n" + footer
             await query.edit_message_text(subscribed_text, parse_mode="Markdown")
             await self._run_check_and_reply(query, subscription.id, lang, user=db_user)
+            if not is_free:
+                await self._show_reminder_picker(query, subscription.id, lang)
         else:
             await query.edit_message_text(t(lang, "already_subscribed"))
 
@@ -450,6 +501,37 @@ class BotHandlers:
             await query.edit_message_text(t(lang, "unsub_success"))
         else:
             await query.edit_message_text(t(lang, "unsub_fail"))
+
+    async def _show_reminder_picker(self, query, sub_id: int, lang: str):
+        """Send reminder picker as a new message (used after subscribe)."""
+        sub = self.subscription_service.get_subscription(sub_id)
+        current = _interval_label(sub.reminder_interval_minutes or 1440)
+        await query.message.reply_text(
+            t(lang, "reminder_picker_prompt", current=current),
+            reply_markup=_reminder_keyboard(sub_id),
+            parse_mode="Markdown",
+        )
+
+    async def _show_reminder_picker_edit(self, query, sub_id: int, lang: str):
+        """Edit current message to show reminder picker (used from /list)."""
+        sub = self.subscription_service.get_subscription(sub_id)
+        current = _interval_label(sub.reminder_interval_minutes or 1440)
+        await query.edit_message_text(
+            t(lang, "reminder_picker_prompt", current=current),
+            reply_markup=_reminder_keyboard(sub_id),
+            parse_mode="Markdown",
+        )
+
+    async def _set_reminder_interval(self, query, sub_id: int, minutes: int, lang: str):
+        with self.db.get_session() as session:
+            sub = session.query(Subscription).filter_by(id=sub_id).first()
+            if sub:
+                sub.reminder_interval_minutes = minutes
+                session.commit()
+        await query.edit_message_text(
+            t(lang, "reminder_set", interval=_interval_label(minutes)),
+            parse_mode="Markdown",
+        )
 
     async def _run_check_and_reply(self, query, subscription_id: int, lang: str = "en", user=None):
         try:
@@ -461,15 +543,14 @@ class BotHandlers:
                 return
             if check.available and check.appointments:
                 message = t(lang, "found_apts_header", n=check.appointment_count, name=service_name)
-                apt_at = t(lang, "apt_at")
-                for apt in check.appointments[:10]:
-                    message += f"📅 {apt.appointment_date} {apt_at} {apt.appointment_time}\n"
-                if check.appointment_count > 10:
-                    message += t(lang, "more_apts", n=check.appointment_count - 10)
+                message += format_apt_grouped(check.appointments, lang)
                 footer = self._ad_footer(lang, user) if user else None
                 if footer:
                     message += "\n\n" + footer
-                await query.edit_message_text(message, parse_mode="Markdown")
+                keyboard = InlineKeyboardMarkup([[
+                    InlineKeyboardButton(t(lang, "btn_unsubscribe"), callback_data=f"unsub_{subscription_id}"),
+                ]])
+                await query.edit_message_text(message, parse_mode="Markdown", reply_markup=keyboard)
             else:
                 no_apts_text = t(lang, "no_apts", name=service_name)
                 footer = self._ad_footer(lang, user) if user else None
@@ -523,31 +604,6 @@ class BotHandlers:
         lang = db_user.language
         self.user_service.update_plan(db_user.id, UserPlan.PREMIUM)
         await update.message.reply_text(t(lang, "premium_activated"), parse_mode="Markdown")
-
-    async def setschedule_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = update.effective_user
-        db_user = self.user_service.get_user_by_telegram_id(user.id)
-        if not db_user:
-            await update.message.reply_text("❌ Please use /start first.")
-            return
-        lang = db_user.language
-        if db_user.plan == UserPlan.FREE:
-            btn = InlineKeyboardButton(t(lang, "btn_get_premium"), callback_data="get_premium")
-            await update.message.reply_text(
-                t(lang, "premium_only"),
-                reply_markup=InlineKeyboardMarkup([[btn]]),
-            )
-            return
-        if not context.args or not context.args[0].isdigit():
-            await update.message.reply_text(t(lang, "setschedule_usage"))
-            return
-        hours = int(context.args[0])
-        if hours < 1 or hours > 24:
-            await update.message.reply_text(t(lang, "hours_invalid"))
-            return
-        for sub in self.subscription_service.get_user_subscriptions(db_user.id):
-            self.subscription_service.update_subscription(sub.id, interval_hours=hours)
-        await update.message.reply_text(t(lang, "schedule_updated", n=hours))
 
     async def language_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = update.effective_user

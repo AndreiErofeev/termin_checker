@@ -138,6 +138,11 @@ class Subscription(Base):
     consecutive_errors = Column(Integer, default=0)
     last_available = Column(Boolean, default=False, nullable=False)
     last_notified_at = Column(DateTime, nullable=True)
+    reminder_interval_minutes = Column(Integer, nullable=True)  # None = plan default
+
+    # Missed-opportunity tracking (free users)
+    became_available_at = Column(DateTime, nullable=True)
+    last_missed_notification_at = Column(DateTime, nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

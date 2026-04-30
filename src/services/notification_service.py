@@ -6,14 +6,17 @@ Handles sending notifications to users via Telegram.
 
 import logging
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 from telegram import Bot
 from telegram.error import TelegramError
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 from ..core.database import Database
 from ..core.models import Notification, Check, Appointment, User, Subscription
-from ..bot.i18n import t
+from ..bot.i18n import t, format_apt_grouped
 
 logger = logging.getLogger(__name__)
 
@@ -32,34 +35,15 @@ class NotificationService:
         self.db = db
         self.bot = Bot(token=bot_token)
 
-    def _format_apt_list(self, lang: str, appointments: List[Appointment]) -> str:
-        """Format up to 10 appointment slots as a string."""
-        lines = []
-        for apt in appointments[:10]:
-            lines.append(f"📅 {apt.appointment_date} {t(lang, 'apt_at')} {apt.appointment_time}")
-        if len(appointments) > 10:
-            lines.append(t(lang, "more_apts", n=len(appointments) - 10))
-        return "\n".join(lines)
-
-    async def _send(self, user: User, check: Check, message: str) -> bool:
-        """Send message and record in Notification table."""
+    async def _send(self, user: User, check: Check, message: str, reply_markup=None) -> bool:
+        """Send message and record in Notification table. Returns True iff Telegram delivery succeeded."""
         try:
             await self.bot.send_message(
                 chat_id=user.telegram_id,
                 text=message,
                 parse_mode="Markdown",
+                reply_markup=reply_markup,
             )
-            with self.db.get_session() as session:
-                session.add(Notification(
-                    user_id=user.id,
-                    check_id=check.id,
-                    message=message,
-                    sent_at=datetime.now(),
-                    success=True,
-                ))
-                session.commit()
-            logger.info(f"Sent notification to user {user.telegram_id} for check {check.id}")
-            return True
         except TelegramError as e:
             logger.error(f"Telegram error for user {user.telegram_id}: {e}")
             try:
@@ -72,13 +56,27 @@ class NotificationService:
                         success=False,
                         error_message=str(e),
                     ))
-                    session.commit()
             except Exception:
                 pass
             return False
         except Exception as e:
             logger.error(f"Error sending notification to user {user.telegram_id}: {e}", exc_info=True)
             return False
+
+        # Telegram send succeeded — DB audit record is best-effort
+        try:
+            with self.db.get_session() as session:
+                session.add(Notification(
+                    user_id=user.id,
+                    check_id=check.id,
+                    message=message,
+                    sent_at=datetime.now(),
+                    success=True,
+                ))
+        except Exception as e:
+            logger.warning(f"Failed to record notification in DB (message was delivered): {e}")
+        logger.info(f"Sent notification to user {user.telegram_id} for check {check.id}")
+        return True
 
     async def send_appointment_notification(
         self,
@@ -93,10 +91,13 @@ class NotificationService:
         header_key = "notify_reminder_header" if is_reminder else "notify_found_header"
         message = (
             t(lang, header_key, name=service.service_name)
-            + self._format_apt_list(lang, appointments)
+            + format_apt_grouped(appointments, lang)
             + t(lang, "notify_book_now", url=service.base_url)
         )
-        return await self._send(user, check, message)
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton(t(lang, "btn_unsubscribe"), callback_data=f"unsub_{subscription.id}"),
+        ]])
+        return await self._send(user, check, message, reply_markup=keyboard)
 
     async def send_appointments_gone_notification(
         self,
@@ -106,6 +107,29 @@ class NotificationService:
     ) -> bool:
         lang = user.language
         message = t(lang, "notify_gone", name=subscription.service.service_name)
+        return await self._send(user, check, message)
+
+    _BERLIN = ZoneInfo("Europe/Berlin")
+
+    async def send_missed_opportunity_notification(
+        self,
+        user: User,
+        subscription: Subscription,
+        check: Check,
+        became_available_at: datetime,
+        gone_at: datetime,
+    ) -> bool:
+        """Send 'you missed it' upsell to a free user whose slots appeared and disappeared unnoticed."""
+        lang = user.language
+        appeared_str = became_available_at.replace(tzinfo=timezone.utc).astimezone(self._BERLIN).strftime("%H:%M")
+        gone_str = gone_at.replace(tzinfo=timezone.utc).astimezone(self._BERLIN).strftime("%H:%M")
+        message = t(
+            lang,
+            "notify_missed_opportunity",
+            name=subscription.service.service_name,
+            appeared=appeared_str,
+            gone=gone_str,
+        )
         return await self._send(user, check, message)
 
     async def send_error_notification(

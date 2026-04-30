@@ -8,28 +8,30 @@ STRINGS = {
             "Commands:\n"
             "/subscribe — Subscribe to a service\n"
             "/list — View your subscriptions\n"
-            "/unsubscribe — Cancel a subscription\n"
+            "/unsubscribe — Remove a subscription\n"
             "/check — Manual check\n"
             "/language — Change language\n"
-            "/help — Help\n\n"
+            "/premium — Upgrade to Premium\n"
+            "/help — Help & all commands\n\n"
             "Your plan: {plan}"
         ),
         "help_text": (
             "📖 *Help & Commands*\n\n"
-            "/start — Start the bot\n"
             "/subscribe — Subscribe to appointment notifications\n"
             "/list — View your active subscriptions\n"
-            "/unsubscribe — Cancel a subscription\n"
+            "/unsubscribe — Remove a subscription\n"
             "/check — Manually check for appointments\n"
             "/language — Change bot language\n"
+            "/premium — Upgrade to Premium\n"
             "/help — This message\n\n"
             "*How it works:*\n"
             "1. Subscribe to a service via /subscribe\n"
             "2. Bot checks automatically and notifies you when slots open\n"
             "3. Manage subscriptions with /list and /unsubscribe\n\n"
             "*Plans:*\n"
-            "• FREE: Up to 3 subscriptions, checks every 12 hours\n"
-            "• PREMIUM: Unlimited subscriptions, custom schedule"
+            "• FREE: Up to 3 subscriptions, checks 4× daily\n"
+            "• PREMIUM: Unlimited subscriptions, checks every 15 min, configurable reminders\n\n"
+            "📋 /terms — Terms of Use"
         ),
         "user_not_found": "❌ User not found. Please use /start first.",
         "no_subs": "📭 You have no active subscriptions.\n\nUse /subscribe to start monitoring a service.",
@@ -44,8 +46,8 @@ STRINGS = {
         "select_dept": "📝 *Select a department:*",
         "select_unsub": "🗑️ *Select subscription to cancel:*",
         "select_check": "🔍 *Select subscription to check:*",
-        "cancelled": "❌ Cancelled.",
-        "btn_cancel": "❌ Cancel",
+        "cancelled": "OK.",
+        "btn_cancel": "✖️ Close",
         "btn_back": "⬅️ Back",
         "dept_not_found": "❌ Department not found.",
         "no_services_dept": "❌ No services found in this department.",
@@ -61,8 +63,8 @@ STRINGS = {
         "freq_every_15min": "Every 15 min",
         "freq_every_nh": "every {n}h",
         "already_subscribed": "❌ Already subscribed to this service.",
-        "unsub_success": "✅ Subscription cancelled.",
-        "unsub_fail": "❌ Failed to cancel subscription.",
+        "unsub_success": "✅ Unsubscribed.",
+        "unsub_fail": "❌ Failed to unsubscribe.",
         "check_fail": "❌ Failed to run check.",
         "found_apts_header": "✅ *Found {n} appointment(s) for {name}!*\n\n",
         "apt_at": "at",
@@ -79,12 +81,9 @@ STRINGS = {
         "premium_no_user": "❌ Could not activate Premium — user not found.",
         "premium_activated": (
             "🎉 *Premium activated!*\n\nYou now have unlimited subscriptions.\n"
-            "Use /setschedule <hours> to customize check frequency."
+            "Checks run every 15 min. Use /list to configure reminder frequency per subscription."
         ),
         "premium_only": "⚠️ Custom schedules are a Premium feature.\nUse /premium to upgrade.",
-        "setschedule_usage": "Usage: /setschedule <hours>\nExample: /setschedule 2",
-        "hours_invalid": "❌ Hours must be between 1 and 24.",
-        "schedule_updated": "✅ All subscriptions will now check every {n}h.",
         "language_choose": "🌐 *Choose your language:*",
         "language_set": "✅ Language updated.",
         "ad_premium_upsell": (
@@ -95,11 +94,28 @@ STRINGS = {
         "confirm_sub_prompt": "Subscribe to *{name}*?",
         "confirm_unsub_prompt": "Unsubscribe from *{name}*?",
         "btn_yes_subscribe": "✅ Yes, subscribe",
-        "btn_yes_unsubscribe": "✅ Yes, unsubscribe",
+        "btn_yes_unsubscribe": "🗑 Yes, unsubscribe",
         "notify_found_header": "🔔 *Appointments available for {name}!*\n\n",
         "notify_reminder_header": "⏰ *Still available — {name}:*\n\n",
         "notify_gone": "😔 No more appointments for *{name}* right now.\n\nI'll keep checking and notify you when they're back.",
         "notify_book_now": "\n🔗 Book now: {url}",
+        "apt_date_summary": "📅 {date} — {n} slots from {first_time}",
+        "more_dates": "…and {n} more date(s)",
+        "btn_unsubscribe": "❌ Unsubscribe",
+        "btn_change_reminder": "⚙️ Reminders",
+        "reminder_picker_prompt": "⏰ *Reminder frequency*\nHow often should I remind you while appointments are available?\n\nCurrent: every {current}",
+        "reminder_set": "✅ Got it — I'll remind you every {interval}.",
+        "btn_keep_subscription": "⬅️ Keep subscription",
+        "unsub_kept": "👍 Still monitoring.",
+        "btn_no_subscribe": "✖️ No thanks",
+        "sub_not_subscribed": "✖️ No subscription added.",
+        "notify_missed_opportunity": (
+            "⚡ *Slots appeared — and disappeared!*\n\n"
+            "Appointments for *{name}* were available at {appeared} today — "
+            "but by {gone} they were already gone.\n\n"
+            "💎 With *Premium* you're checked every 15 min — you'd never miss a slot again.\n\n"
+            "→ /premium"
+        ),
     },
     "de": {
         "welcome": (
@@ -108,28 +124,30 @@ STRINGS = {
             "Befehle:\n"
             "/subscribe — Service abonnieren\n"
             "/list — Abonnements anzeigen\n"
-            "/unsubscribe — Abonnement kündigen\n"
+            "/unsubscribe — Abonnement beenden\n"
             "/check — Manuelle Prüfung\n"
             "/language — Sprache ändern\n"
-            "/help — Hilfe\n\n"
+            "/premium — Auf Premium upgraden\n"
+            "/help — Hilfe & alle Befehle\n\n"
             "Ihr Plan: {plan}"
         ),
         "help_text": (
             "📖 *Hilfe & Befehle*\n\n"
-            "/start — Bot starten\n"
             "/subscribe — Terminbenachrichtigungen abonnieren\n"
             "/list — Aktive Abonnements anzeigen\n"
-            "/unsubscribe — Abonnement kündigen\n"
+            "/unsubscribe — Abonnement beenden\n"
             "/check — Manuell nach Terminen suchen\n"
             "/language — Botsprache ändern\n"
+            "/premium — Auf Premium upgraden\n"
             "/help — Diese Nachricht\n\n"
             "*So funktioniert es:*\n"
             "1. Abonnieren Sie einen Dienst über /subscribe\n"
             "2. Der Bot prüft automatisch und benachrichtigt Sie, wenn Termine frei werden\n"
             "3. Abonnements mit /list und /unsubscribe verwalten\n\n"
             "*Tarife:*\n"
-            "• KOSTENLOS: Bis zu 3 Abonnements, Prüfung alle 12 Stunden\n"
-            "• PREMIUM: Unbegrenzte Abonnements, individueller Zeitplan"
+            "• KOSTENLOS: Bis zu 3 Abonnements, 4× täglich\n"
+            "• PREMIUM: Unbegrenzte Abonnements, alle 15 Min., konfigurierbare Erinnerungen\n\n"
+            "📋 /terms — Nutzungsbedingungen"
         ),
         "user_not_found": "❌ Benutzer nicht gefunden. Bitte /start verwenden.",
         "no_subs": "📭 Sie haben keine aktiven Abonnements.\n\nMit /subscribe einen Dienst überwachen.",
@@ -144,8 +162,8 @@ STRINGS = {
         "select_dept": "📝 *Abteilung wählen:*",
         "select_unsub": "🗑️ *Abonnement zum Kündigen wählen:*",
         "select_check": "🔍 *Abonnement zur Prüfung wählen:*",
-        "cancelled": "❌ Abgebrochen.",
-        "btn_cancel": "❌ Abbrechen",
+        "cancelled": "OK.",
+        "btn_cancel": "✖️ Schließen",
         "btn_back": "⬅️ Zurück",
         "dept_not_found": "❌ Abteilung nicht gefunden.",
         "no_services_dept": "❌ Keine Dienste in dieser Abteilung.",
@@ -161,7 +179,7 @@ STRINGS = {
         "freq_every_15min": "Alle 15 Min.",
         "freq_every_nh": "alle {n}h",
         "already_subscribed": "❌ Bereits abonniert.",
-        "unsub_success": "✅ Abonnement gekündigt.",
+        "unsub_success": "✅ Abonnement beendet.",
         "unsub_fail": "❌ Kündigung fehlgeschlagen.",
         "check_fail": "❌ Prüfung fehlgeschlagen.",
         "found_apts_header": "✅ *{n} Termin(e) für {name} gefunden!*\n\n",
@@ -179,12 +197,9 @@ STRINGS = {
         "premium_no_user": "❌ Premium konnte nicht aktiviert werden — Benutzer nicht gefunden.",
         "premium_activated": (
             "🎉 *Premium aktiviert!*\n\nUnbegrenzte Abonnements.\n"
-            "Mit /setschedule <Stunden> den Zeitplan anpassen."
+            "Prüfungen alle 15 Min. Erinnerungsintervall pro Abonnement in /list konfigurierbar."
         ),
         "premium_only": "⚠️ Individuelle Zeitpläne sind ein Premium-Feature.\nMit /premium upgraden.",
-        "setschedule_usage": "Verwendung: /setschedule <Stunden>\nBeispiel: /setschedule 2",
-        "hours_invalid": "❌ Stunden müssen zwischen 1 und 24 liegen.",
-        "schedule_updated": "✅ Alle Abonnements prüfen jetzt alle {n}h.",
         "language_choose": "🌐 *Sprache wählen:*",
         "language_set": "✅ Sprache gespeichert.",
         "ad_premium_upsell": (
@@ -195,11 +210,28 @@ STRINGS = {
         "confirm_sub_prompt": "Abonnieren *{name}*?",
         "confirm_unsub_prompt": "Abonnement von *{name}* kündigen?",
         "btn_yes_subscribe": "✅ Ja, abonnieren",
-        "btn_yes_unsubscribe": "✅ Ja, kündigen",
+        "btn_yes_unsubscribe": "🗑 Ja, kündigen",
         "notify_found_header": "🔔 *Termine verfügbar für {name}!*\n\n",
         "notify_reminder_header": "⏰ *Noch verfügbar — {name}:*\n\n",
         "notify_gone": "😔 Keine Termine mehr für *{name}* verfügbar.\n\nIch prüfe weiter und benachrichtige Sie, sobald wieder Slots frei sind.",
         "notify_book_now": "\n🔗 Jetzt buchen: {url}",
+        "apt_date_summary": "📅 {date} — {n} Termine ab {first_time}",
+        "more_dates": "…und {n} weitere Datum/Daten",
+        "btn_unsubscribe": "❌ Abonnement kündigen",
+        "btn_change_reminder": "⚙️ Erinnerungen",
+        "reminder_picker_prompt": "⏰ *Erinnerungsintervall*\nWie oft soll ich Sie erinnern, solange Termine verfügbar sind?\n\nAktuell: alle {current}",
+        "reminder_set": "✅ Gespeichert — ich erinnere alle {interval}.",
+        "btn_keep_subscription": "⬅️ Abonnement behalten",
+        "unsub_kept": "👍 Weiter wird überwacht.",
+        "btn_no_subscribe": "✖️ Nein danke",
+        "sub_not_subscribed": "✖️ Nicht abonniert.",
+        "notify_missed_opportunity": (
+            "⚡ *Termine erschienen — und sind wieder weg!*\n\n"
+            "Für *{name}* gab es heute um {appeared} Termine — "
+            "doch um {gone} waren sie schon vergeben.\n\n"
+            "💎 Mit *Premium* wirst du alle 15 Min. geprüft — kein Slot geht mehr verloren.\n\n"
+            "→ /premium"
+        ),
     },
     "ru": {
         "welcome": (
@@ -208,28 +240,30 @@ STRINGS = {
             "Команды:\n"
             "/subscribe — Подписаться на услугу\n"
             "/list — Мои подписки\n"
-            "/unsubscribe — Отменить подписку\n"
+            "/unsubscribe — Отписаться от услуги\n"
             "/check — Проверить вручную\n"
             "/language — Изменить язык\n"
-            "/help — Помощь\n\n"
+            "/premium — Перейти на Premium\n"
+            "/help — Помощь и все команды\n\n"
             "Ваш тариф: {plan}"
         ),
         "help_text": (
             "📖 *Помощь и команды*\n\n"
-            "/start — Запустить бота\n"
             "/subscribe — Подписаться на уведомления о записи\n"
             "/list — Активные подписки\n"
-            "/unsubscribe — Отменить подписку\n"
+            "/unsubscribe — Отписаться от услуги\n"
             "/check — Ручная проверка\n"
             "/language — Изменить язык\n"
+            "/premium — Перейти на Premium\n"
             "/help — Это сообщение\n\n"
             "*Как это работает:*\n"
             "1. Подпишитесь на услугу через /subscribe\n"
             "2. Бот автоматически проверяет и уведомляет, когда появляются слоты\n"
             "3. Управляйте подписками через /list и /unsubscribe\n\n"
             "*Тарифы:*\n"
-            "• БЕСПЛАТНО: до 3 подписок, проверка каждые 12 часов\n"
-            "• PREMIUM: безлимитные подписки, настраиваемое расписание"
+            "• БЕСПЛАТНО: до 3 подписок, 4 проверки в день\n"
+            "• PREMIUM: безлимитные подписки, каждые 15 мин., настраиваемые напоминания\n\n"
+            "📋 /terms — Условия использования"
         ),
         "user_not_found": "❌ Пользователь не найден. Используйте /start.",
         "no_subs": "📭 У вас нет активных подписок.\n\nИспользуйте /subscribe для отслеживания.",
@@ -244,8 +278,8 @@ STRINGS = {
         "select_dept": "📝 *Выберите ведомство:*",
         "select_unsub": "🗑️ *Выберите подписку для отмены:*",
         "select_check": "🔍 *Выберите подписку для проверки:*",
-        "cancelled": "❌ Отменено.",
-        "btn_cancel": "❌ Отмена",
+        "cancelled": "OK.",
+        "btn_cancel": "✖️ Закрыть",
         "btn_back": "⬅️ Назад",
         "dept_not_found": "❌ Ведомство не найдено.",
         "no_services_dept": "❌ Услуги в этом ведомстве не найдены.",
@@ -261,8 +295,8 @@ STRINGS = {
         "freq_every_15min": "Каждые 15 мин",
         "freq_every_nh": "каждые {n}ч",
         "already_subscribed": "❌ Уже подписаны на эту услугу.",
-        "unsub_success": "✅ Подписка отменена.",
-        "unsub_fail": "❌ Не удалось отменить подписку.",
+        "unsub_success": "✅ Подписка отключена.",
+        "unsub_fail": "❌ Не удалось отписаться.",
         "check_fail": "❌ Не удалось выполнить проверку.",
         "found_apts_header": "✅ *Найдено {n} запис(ей) для {name}!*\n\n",
         "apt_at": "в",
@@ -279,12 +313,9 @@ STRINGS = {
         "premium_no_user": "❌ Не удалось активировать Premium — пользователь не найден.",
         "premium_activated": (
             "🎉 *Premium активирован!*\n\nБезлимитные подписки.\n"
-            "Используйте /setschedule <часы> для настройки расписания."
+            "Проверки каждые 15 мин. Частота напоминаний настраивается в /list."
         ),
         "premium_only": "⚠️ Настраиваемое расписание — функция Premium.\nИспользуйте /premium.",
-        "setschedule_usage": "Использование: /setschedule <часы>\nПример: /setschedule 2",
-        "hours_invalid": "❌ Часы должны быть от 1 до 24.",
-        "schedule_updated": "✅ Все подписки теперь проверяются каждые {n}ч.",
         "language_choose": "🌐 *Выберите язык:*",
         "language_set": "✅ Язык сохранён.",
         "ad_premium_upsell": (
@@ -294,11 +325,28 @@ STRINGS = {
         "confirm_sub_prompt": "Подписаться на *{name}*?",
         "confirm_unsub_prompt": "Отписаться от *{name}*?",
         "btn_yes_subscribe": "✅ Да, подписаться",
-        "btn_yes_unsubscribe": "✅ Да, отписаться",
+        "btn_yes_unsubscribe": "🗑 Да, отписаться",
         "notify_found_header": "🔔 *Записи доступны для {name}!*\n\n",
         "notify_reminder_header": "⏰ *Ещё доступно — {name}:*\n\n",
         "notify_gone": "😔 Записи для *{name}* больше недоступны.\n\nБот продолжит проверку и уведомит вас, когда появятся слоты.",
         "notify_book_now": "\n🔗 Записаться: {url}",
+        "apt_date_summary": "📅 {date} — {n} записей с {first_time}",
+        "more_dates": "…и ещё {n} дат",
+        "btn_unsubscribe": "❌ Отписаться",
+        "btn_change_reminder": "⚙️ Напоминания",
+        "reminder_picker_prompt": "⏰ *Частота напоминаний*\nКак часто напоминать о доступных записях?\n\nТекущее: каждые {current}",
+        "reminder_set": "✅ Сохранено — буду напоминать каждые {interval}.",
+        "btn_keep_subscription": "⬅️ Оставить подписку",
+        "unsub_kept": "👍 Мониторинг продолжается.",
+        "btn_no_subscribe": "✖️ Нет, спасибо",
+        "sub_not_subscribed": "✖️ Подписка не оформлена.",
+        "notify_missed_opportunity": (
+            "⚡ *Слоты появились — и исчезли!*\n\n"
+            "Для *{name}* сегодня в {appeared} были доступны записи — "
+            "но к {gone} они уже пропали.\n\n"
+            "💎 С *Premium* проверки каждые 15 мин — вы никогда не пропустите слот.\n\n"
+            "→ /premium"
+        ),
     },
     "uk": {
         "welcome": (
@@ -307,28 +355,30 @@ STRINGS = {
             "Команди:\n"
             "/subscribe — Підписатися на послугу\n"
             "/list — Мої підписки\n"
-            "/unsubscribe — Скасувати підписку\n"
+            "/unsubscribe — Відписатися від послуги\n"
             "/check — Перевірити вручну\n"
             "/language — Змінити мову\n"
-            "/help — Допомога\n\n"
+            "/premium — Перейти на Premium\n"
+            "/help — Допомога та всі команди\n\n"
             "Ваш тариф: {plan}"
         ),
         "help_text": (
             "📖 *Допомога та команди*\n\n"
-            "/start — Запустити бота\n"
             "/subscribe — Підписатися на сповіщення про запис\n"
             "/list — Активні підписки\n"
-            "/unsubscribe — Скасувати підписку\n"
+            "/unsubscribe — Відписатися від послуги\n"
             "/check — Ручна перевірка\n"
             "/language — Змінити мову\n"
+            "/premium — Перейти на Premium\n"
             "/help — Це повідомлення\n\n"
             "*Як це працює:*\n"
             "1. Підпишіться на послугу через /subscribe\n"
             "2. Бот автоматично перевіряє та сповіщає, коли з'являються слоти\n"
             "3. Керуйте підписками через /list та /unsubscribe\n\n"
             "*Тарифи:*\n"
-            "• БЕЗКОШТОВНО: до 3 підписок, перевірка кожні 12 годин\n"
-            "• PREMIUM: необмежені підписки, налаштований графік"
+            "• БЕЗКОШТОВНО: до 3 підписок, 4 перевірки на день\n"
+            "• PREMIUM: необмежені підписки, кожні 15 хв., налаштовані нагадування\n\n"
+            "📋 /terms — Умови використання"
         ),
         "user_not_found": "❌ Користувача не знайдено. Використайте /start.",
         "no_subs": "📭 У вас немає активних підписок.\n\nВикористайте /subscribe для відстеження.",
@@ -343,8 +393,8 @@ STRINGS = {
         "select_dept": "📝 *Оберіть відомство:*",
         "select_unsub": "🗑️ *Оберіть підписку для скасування:*",
         "select_check": "🔍 *Оберіть підписку для перевірки:*",
-        "cancelled": "❌ Скасовано.",
-        "btn_cancel": "❌ Скасувати",
+        "cancelled": "OK.",
+        "btn_cancel": "✖️ Закрити",
         "btn_back": "⬅️ Назад",
         "dept_not_found": "❌ Відомство не знайдено.",
         "no_services_dept": "❌ Послуги у цьому відомстві не знайдено.",
@@ -360,8 +410,8 @@ STRINGS = {
         "freq_every_15min": "Кожні 15 хв",
         "freq_every_nh": "кожні {n}г",
         "already_subscribed": "❌ Вже підписані на цю послугу.",
-        "unsub_success": "✅ Підписку скасовано.",
-        "unsub_fail": "❌ Не вдалося скасувати підписку.",
+        "unsub_success": "✅ Підписку відключено.",
+        "unsub_fail": "❌ Не вдалося відписатися.",
         "check_fail": "❌ Не вдалося виконати перевірку.",
         "found_apts_header": "✅ *Знайдено {n} запис(ів) для {name}!*\n\n",
         "apt_at": "о",
@@ -378,12 +428,9 @@ STRINGS = {
         "premium_no_user": "❌ Не вдалося активувати Premium — користувача не знайдено.",
         "premium_activated": (
             "🎉 *Premium активовано!*\n\nНеобмежені підписки.\n"
-            "Використайте /setschedule <години> для налаштування графіку."
+            "Перевірки кожні 15 хв. Частота нагадувань налаштовується в /list."
         ),
         "premium_only": "⚠️ Налаштований графік — функція Premium.\nВикористайте /premium.",
-        "setschedule_usage": "Використання: /setschedule <години>\nПриклад: /setschedule 2",
-        "hours_invalid": "❌ Години мають бути від 1 до 24.",
-        "schedule_updated": "✅ Усі підписки тепер перевіряються кожні {n}г.",
         "language_choose": "🌐 *Оберіть мову:*",
         "language_set": "✅ Мову збережено.",
         "ad_premium_upsell": (
@@ -393,11 +440,28 @@ STRINGS = {
         "confirm_sub_prompt": "Підписатися на *{name}*?",
         "confirm_unsub_prompt": "Відписатися від *{name}*?",
         "btn_yes_subscribe": "✅ Так, підписатися",
-        "btn_yes_unsubscribe": "✅ Так, відписатися",
+        "btn_yes_unsubscribe": "🗑 Так, відписатися",
         "notify_found_header": "🔔 *Записи доступні для {name}!*\n\n",
         "notify_reminder_header": "⏰ *Ще доступно — {name}:*\n\n",
         "notify_gone": "😔 Записи для *{name}* більше недоступні.\n\nБот продовжить перевірку та повідомить, коли з'являться слоти.",
         "notify_book_now": "\n🔗 Записатися: {url}",
+        "apt_date_summary": "📅 {date} — {n} записів з {first_time}",
+        "more_dates": "…і ще {n} дат",
+        "btn_unsubscribe": "❌ Відписатися",
+        "btn_change_reminder": "⚙️ Нагадування",
+        "reminder_picker_prompt": "⏰ *Частота нагадувань*\nЯк часто нагадувати про доступні записи?\n\nПоточне: кожні {current}",
+        "reminder_set": "✅ Збережено — нагадуватиму кожні {interval}.",
+        "btn_keep_subscription": "⬅️ Залишити підписку",
+        "unsub_kept": "👍 Моніторинг триває.",
+        "btn_no_subscribe": "✖️ Ні, дякую",
+        "sub_not_subscribed": "✖️ Не підписано.",
+        "notify_missed_opportunity": (
+            "⚡ *Слоти з'явились — і зникли!*\n\n"
+            "Для *{name}* сьогодні о {appeared} були доступні записи — "
+            "але вже о {gone} їх не стало.\n\n"
+            "💎 З *Premium* перевірки кожні 15 хв — ви ніколи не пропустите слот.\n\n"
+            "→ /premium"
+        ),
     },
     "tr": {
         "welcome": (
@@ -406,28 +470,30 @@ STRINGS = {
             "Komutlar:\n"
             "/subscribe — Bir hizmete abone ol\n"
             "/list — Aboneliklerim\n"
-            "/unsubscribe — Aboneliği iptal et\n"
+            "/unsubscribe — Aboneliği sonlandır\n"
             "/check — Manuel kontrol\n"
             "/language — Dil değiştir\n"
-            "/help — Yardım\n\n"
+            "/premium — Premium'a yükselt\n"
+            "/help — Yardım ve tüm komutlar\n\n"
             "Planınız: {plan}"
         ),
         "help_text": (
             "📖 *Yardım ve Komutlar*\n\n"
-            "/start — Botu başlat\n"
             "/subscribe — Randevu bildirimlerine abone ol\n"
             "/list — Aktif abonelikler\n"
-            "/unsubscribe — Aboneliği iptal et\n"
+            "/unsubscribe — Aboneliği sonlandır\n"
             "/check — Manuel kontrol\n"
             "/language — Dil değiştir\n"
+            "/premium — Premium'a yükselt\n"
             "/help — Bu mesaj\n\n"
             "*Nasıl çalışır:*\n"
             "1. /subscribe ile bir hizmete abone olun\n"
             "2. Bot otomatik kontrol eder ve slot açıldığında bildirir\n"
             "3. /list ve /unsubscribe ile abonelikleri yönetin\n\n"
             "*Planlar:*\n"
-            "• ÜCRETSİZ: 3 aboneliğe kadar, 12 saatte bir kontrol\n"
-            "• PREMIUM: Sınırsız abonelik, özel zamanlama"
+            "• ÜCRETSİZ: 3 aboneliğe kadar, günde 4 kontrol\n"
+            "• PREMIUM: Sınırsız abonelik, 15 dk'da bir, yapılandırılabilir hatırlatmalar\n\n"
+            "📋 /terms — Kullanım Koşulları"
         ),
         "user_not_found": "❌ Kullanıcı bulunamadı. Lütfen /start kullanın.",
         "no_subs": "📭 Aktif aboneliğiniz yok.\n\nBir hizmeti takip etmek için /subscribe kullanın.",
@@ -442,8 +508,8 @@ STRINGS = {
         "select_dept": "📝 *Departman seçin:*",
         "select_unsub": "🗑️ *İptal edilecek aboneliği seçin:*",
         "select_check": "🔍 *Kontrol edilecek aboneliği seçin:*",
-        "cancelled": "❌ İptal edildi.",
-        "btn_cancel": "❌ İptal",
+        "cancelled": "OK.",
+        "btn_cancel": "✖️ Kapat",
         "btn_back": "⬅️ Geri",
         "dept_not_found": "❌ Departman bulunamadı.",
         "no_services_dept": "❌ Bu departmanda hizmet bulunamadı.",
@@ -459,8 +525,8 @@ STRINGS = {
         "freq_every_15min": "Her 15 dakika",
         "freq_every_nh": "her {n} saatte bir",
         "already_subscribed": "❌ Bu hizmete zaten abonesiniz.",
-        "unsub_success": "✅ Abonelik iptal edildi.",
-        "unsub_fail": "❌ Abonelik iptal edilemedi.",
+        "unsub_success": "✅ Abonelikten çıkıldı.",
+        "unsub_fail": "❌ Abonelik sonlandırılamadı.",
         "check_fail": "❌ Kontrol başarısız.",
         "found_apts_header": "✅ *{name} için {n} randevu bulundu!*\n\n",
         "apt_at": "saat",
@@ -477,12 +543,9 @@ STRINGS = {
         "premium_no_user": "❌ Premium etkinleştirilemedi — kullanıcı bulunamadı.",
         "premium_activated": (
             "🎉 *Premium etkinleştirildi!*\n\nSınırsız abonelik.\n"
-            "Kontrol sıklığını ayarlamak için /setschedule <saat> kullanın."
+            "Kontroller 15 dk'da bir çalışır. Hatırlatma sıklığını /list üzerinden ayarlayın."
         ),
         "premium_only": "⚠️ Özel zamanlama Premium özelliğidir.\n/premium kullanın.",
-        "setschedule_usage": "Kullanım: /setschedule <saat>\nÖrnek: /setschedule 2",
-        "hours_invalid": "❌ Saat 1 ile 24 arasında olmalıdır.",
-        "schedule_updated": "✅ Tüm abonelikler artık her {n} saatte bir kontrol edilecek.",
         "language_choose": "🌐 *Dil seçin:*",
         "language_set": "✅ Dil kaydedildi.",
         "ad_premium_upsell": (
@@ -492,11 +555,28 @@ STRINGS = {
         "confirm_sub_prompt": "*{name}* hizmetine abone ol?",
         "confirm_unsub_prompt": "*{name}* aboneliğini iptal et?",
         "btn_yes_subscribe": "✅ Evet, abone ol",
-        "btn_yes_unsubscribe": "✅ Evet, iptal et",
+        "btn_yes_unsubscribe": "🗑 Evet, aboneliği bitir",
         "notify_found_header": "🔔 *{name} için randevu mevcut!*\n\n",
         "notify_reminder_header": "⏰ *Hâlâ mevcut — {name}:*\n\n",
         "notify_gone": "😔 *{name}* için artık randevu yok.\n\nKontrol etmeye devam edeceğim, slot açıldığında bildireceğim.",
         "notify_book_now": "\n🔗 Şimdi rezervasyon yap: {url}",
+        "apt_date_summary": "📅 {date} — {n} slot ({first_time}'dan itibaren)",
+        "more_dates": "…ve {n} tarih daha",
+        "btn_unsubscribe": "❌ Aboneliği iptal et",
+        "btn_change_reminder": "⚙️ Hatırlatmalar",
+        "reminder_picker_prompt": "⏰ *Hatırlatma sıklığı*\nRandevular açıkken ne sıklıkta hatırlatayım?\n\nŞu an: her {current}",
+        "reminder_set": "✅ Tamam — her {interval} hatırlatacağım.",
+        "btn_keep_subscription": "⬅️ Aboneliği koru",
+        "unsub_kept": "👍 Takip devam ediyor.",
+        "btn_no_subscribe": "✖️ Hayır, teşekkürler",
+        "sub_not_subscribed": "✖️ Abone olunmadı.",
+        "notify_missed_opportunity": (
+            "⚡ *Slotlar çıktı — ve gitti!*\n\n"
+            "*{name}* için bugün {appeared}'da randevu vardı — "
+            "ama {gone}'da artık yoktu.\n\n"
+            "💎 *Premium* ile 15 dk'da bir kontrol edilir — hiçbir slotu kaçırmazsınız.\n\n"
+            "→ /premium"
+        ),
     },
 }
 
@@ -505,3 +585,26 @@ def t(lang: str, key: str, **kwargs) -> str:
     """Return translated string, falling back to English if lang or key missing."""
     text = STRINGS.get(lang, {}).get(key) or STRINGS["en"].get(key, key)
     return text.format(**kwargs) if kwargs else text
+
+
+def format_apt_grouped(appointments, lang: str) -> str:
+    """Group appointments by date; show up to 3 dates with slot count and first time."""
+    from collections import defaultdict
+    by_date: dict[str, list[str]] = defaultdict(list)
+    for apt in appointments:
+        by_date[apt.appointment_date].append(apt.appointment_time)
+
+    lines = []
+    for date in sorted(by_date.keys())[:7]:
+        times = sorted(by_date[date])
+        n = len(times)
+        if n == 1:
+            lines.append(f"📅 {date} {t(lang, 'apt_at')} {times[0]}")
+        else:
+            lines.append(t(lang, "apt_date_summary", date=date, n=n, first_time=times[0]))
+
+    remaining = len(by_date) - min(len(by_date), 7)
+    if remaining > 0:
+        lines.append(t(lang, "more_dates", n=remaining))
+
+    return "\n".join(lines)
